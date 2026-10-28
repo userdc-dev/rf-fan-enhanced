@@ -19,6 +19,7 @@ CONF_ENTITY_TYPE = "entity_type"
 # Fan-specific
 CONF_SPEED_COUNT = "speed_count"
 CONF_HAS_ON = "has_on_button"
+CONF_FAN_POWER_MODE = "fan_power_mode"
 
 # Cover-specific
 CONF_HAS_STOP = "has_stop_button"
@@ -50,6 +51,12 @@ ENTITY_TYPE_BUTTON = "button"
 # Light modes
 LIGHT_MODE_TOGGLE = "toggle"
 LIGHT_MODE_ON_OFF = "on_off"
+
+# Fan power modes. Existing entries without this field retain the original
+# dedicated-Off behavior.
+FAN_POWER_MODE_OFF_ONLY = "off_only"
+FAN_POWER_MODE_ON_OFF = "on_off"
+FAN_POWER_MODE_TOGGLE = "toggle"
 
 # Times to repeat a de-noised consensus frame for direct-capture remotes.
 CLEAN_REPEAT = 10

@@ -16,6 +16,7 @@
         "description": "Configure the specific options for this entity. You'll learn each button next.",
         "data": {
           "speed_count": "Number of speeds",
+          "fan_power_mode": "Fan power control type",
           "has_on_button": "Remote has a separate On button",
           "has_stop_button": "Remote has a Stop button",
           "light_mode": "Light control type",
@@ -62,6 +63,7 @@
         "title": "Configure RF device",
         "menu_options": {
           "relearn": "Re-learn a button",
+          "fan_power_settings": "Fan power button style",
           "add_entity": "Add a new entity",
           "finish": "Done",
           "add_fan_speeds": "Add more fan speeds",
@@ -84,6 +86,13 @@
           "speed_count": "Total fan speeds"
         }
       },
+      "fan_power_settings": {
+        "title": "Fan power button style",
+        "description": "Choose how the remote controls fan power. A single toggle button sends the same learned command for On and Off. Existing learned speeds are preserved. Choose Done in the main menu to save.",
+        "data": {
+          "fan_power_mode": "Fan power control type"
+        }
+      },
       "add_entity": {
         "title": "Add a new entity",
         "description": "Choose the type and give it a name. You'll learn its buttons next.",
@@ -97,6 +106,7 @@
         "description": "Configure the specific options for this new entity.",
         "data": {
           "speed_count": "Number of speeds",
+          "fan_power_mode": "Fan power control type",
           "has_on_button": "Remote has a separate On button",
           "has_stop_button": "Remote has a Stop button",
           "light_mode": "Light control type"

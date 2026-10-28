@@ -25,6 +25,7 @@ from .const import (
     CONF_COMMANDS,
     CONF_DIRECT,
     CONF_FREQUENCY,
+    CONF_FAN_POWER_MODE,
     CONF_HAS_ON,
     CONF_NAME,
     CONF_SPEED_COUNT,
@@ -32,6 +33,8 @@ from .const import (
     CONF_TRANSMITTER,
     DOMAIN,
     ENTITY_TYPE_FAN,
+    FAN_POWER_MODE_OFF_ONLY,
+    FAN_POWER_MODE_TOGGLE,
 )
 
 
@@ -52,6 +55,7 @@ async def async_setup_entry(
             key_prefix="",
             speed_count=data.get(CONF_SPEED_COUNT, 3),
             has_on=data.get(CONF_HAS_ON, False),
+            power_mode=data.get(CONF_FAN_POWER_MODE, FAN_POWER_MODE_OFF_ONLY),
         ))
 
     for sub in data.get(CONF_SUB_ENTITIES, []):
@@ -62,6 +66,7 @@ async def async_setup_entry(
                 key_prefix=sub["key_prefix"],
                 speed_count=sub.get("speed_count", 3),
                 has_on=sub.get("has_on", False),
+                power_mode=sub.get("fan_power_mode", FAN_POWER_MODE_OFF_ONLY),
             ))
 
     if entities:
@@ -88,6 +93,7 @@ class RfFan(FanEntity, RestoreEntity):
         key_prefix: str,
         speed_count: int,
         has_on: bool,
+        power_mode: str,
     ) -> None:
         """Initialise from the config entry's learned commands."""
         data = entry.data
@@ -96,6 +102,7 @@ class RfFan(FanEntity, RestoreEntity):
         self._commands: dict[str, Any] = data[CONF_COMMANDS]
         self._speed_count = speed_count
         self._has_on = has_on
+        self._power_mode = power_mode
         self._direct: bool = data.get(CONF_DIRECT, False)
         self._replay_mode = data.get("replay_mode", "legacy")
         self._key_prefix = key_prefix
@@ -170,6 +177,16 @@ class RfFan(FanEntity, RestoreEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
+        if self._power_mode == FAN_POWER_MODE_TOGGLE:
+            if not self._attr_is_on:
+                await self._send(self._pk(CMD_OFF))
+                self._attr_is_on = True
+                if not self._attr_percentage:
+                    self._attr_percentage = ranged_value_to_percentage(
+                        (1, self._speed_count), 1
+                    )
+            self.async_write_ha_state()
+            return
         on_key = self._pk(CMD_ON)
         if self._has_on and on_key in self._commands:
             await self._send(on_key)
@@ -190,7 +207,8 @@ class RfFan(FanEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._send(self._pk(CMD_OFF))
+        if self._power_mode != FAN_POWER_MODE_TOGGLE or self._attr_is_on:
+            await self._send(self._pk(CMD_OFF))
         self._attr_is_on = False
         self._attr_percentage = 0
         self.async_write_ha_state()

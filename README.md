@@ -13,6 +13,8 @@ for userdc-dev's Home Assistant fan setup:
 - Fan lights default to one learned On/Off toggle command, matching most fan
   remotes; separate On and Off commands are also supported when the remote has
   two distinct light buttons
+- Fan power supports one On/Off toggle button, an Off-only button with speeds
+  used to turn on, or separate On and Off buttons
 - Safe addition and re-learning of individual controls
 - A preselected learned-button checklist with confirmed, clean removal
 - Per-device raw or filtered RF replay so non-Mercator fans remain reliable

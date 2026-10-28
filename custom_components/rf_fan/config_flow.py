@@ -43,6 +43,7 @@ from .const import (
     CONF_DIRECT,
     CONF_ENTITY_TYPE,
     CONF_FREQUENCY,
+    CONF_FAN_POWER_MODE,
     CONF_HAS_ON,
     CONF_HAS_STOP,
     CONF_LIGHT_MODE,
@@ -56,6 +57,9 @@ from .const import (
     ENTITY_TYPE_COVER,
     ENTITY_TYPE_FAN,
     ENTITY_TYPE_LIGHT,
+    FAN_POWER_MODE_OFF_ONLY,
+    FAN_POWER_MODE_ON_OFF,
+    FAN_POWER_MODE_TOGGLE,
     LIGHT_MODE_ON_OFF,
     LIGHT_MODE_TOGGLE,
 )
@@ -82,6 +86,12 @@ ENTITY_TYPE_OPTIONS = [
 LIGHT_MODE_OPTIONS = [
     selector.SelectOptionDict(value=LIGHT_MODE_TOGGLE, label="One button (On / Off toggle)"),
     selector.SelectOptionDict(value=LIGHT_MODE_ON_OFF, label="Two buttons (separate On and Off)"),
+]
+
+FAN_POWER_MODE_OPTIONS = [
+    selector.SelectOptionDict(value=FAN_POWER_MODE_TOGGLE, label="One button (On / Off toggle)"),
+    selector.SelectOptionDict(value=FAN_POWER_MODE_OFF_ONLY, label="Off button only (speeds turn fan on)"),
+    selector.SelectOptionDict(value=FAN_POWER_MODE_ON_OFF, label="Two buttons (separate On and Off)"),
 ]
 
 
@@ -118,6 +128,7 @@ def _build_queue(
     *,
     speed_count: int = 0,
     has_on: bool = False,
+    fan_power_mode: str = FAN_POWER_MODE_OFF_ONLY,
     has_stop: bool = False,
     light_mode: str = LIGHT_MODE_TOGGLE,
     customs: list[dict] = [],
@@ -132,7 +143,7 @@ def _build_queue(
     if entity_type == ENTITY_TYPE_FAN:
         queue.append(pk(CMD_OFF))
         queue += [pk(f"speed_{i}") for i in range(1, speed_count + 1)]
-        if has_on:
+        if fan_power_mode == FAN_POWER_MODE_ON_OFF or has_on:
             queue.append(pk(CMD_ON))
     elif entity_type == ENTITY_TYPE_COVER:
         queue.append(pk(CMD_OPEN))
@@ -165,6 +176,7 @@ class _LearnFlowMixin:
     _speed_count: int
     _direct: bool
     _entity_type: str
+    _fan_power_mode: str
 
     def _label(self, key: str | None) -> str:
         """Human-friendly label for a command key."""
@@ -175,7 +187,7 @@ class _LearnFlowMixin:
         # Strip key_prefix if present
         bare = key.split("_", 1)[1] if "_" in key and not key.startswith("speed_") and not key.startswith("custom_") else key
         if bare == CMD_OFF or key == CMD_OFF:
-            return "Off"
+            return "Fan power toggle" if self._fan_power_mode == FAN_POWER_MODE_TOGGLE else "Off"
         if bare == CMD_ON or key == CMD_ON:
             return "On"
         if bare == CMD_LIGHT or key == CMD_LIGHT:
@@ -372,6 +384,7 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
         self._direct: bool = False
         self._entity_type: str = ENTITY_TYPE_FAN
         self._has_on: bool = False
+        self._fan_power_mode: str = FAN_POWER_MODE_OFF_ONLY
         self._has_stop: bool = False
         self._light_mode: str = LIGHT_MODE_TOGGLE
 
@@ -428,10 +441,12 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
 
             if entity_type == ENTITY_TYPE_FAN:
                 self._speed_count = int(user_input[CONF_SPEED_COUNT])
-                self._has_on = user_input.get(CONF_HAS_ON, False)
+                self._fan_power_mode = user_input.get(CONF_FAN_POWER_MODE, FAN_POWER_MODE_TOGGLE)
+                self._has_on = self._fan_power_mode == FAN_POWER_MODE_ON_OFF
                 self._data.update({
                     CONF_SPEED_COUNT: self._speed_count,
                     CONF_HAS_ON: self._has_on,
+                    CONF_FAN_POWER_MODE: self._fan_power_mode,
                 })
             elif entity_type == ENTITY_TYPE_COVER:
                 self._has_stop = user_input.get(CONF_HAS_STOP, False)
@@ -451,6 +466,7 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
                 entity_type,
                 speed_count=self._speed_count,
                 has_on=self._has_on,
+                fan_power_mode=self._fan_power_mode,
                 has_stop=self._has_stop,
                 light_mode=self._light_mode,
                 customs=self._customs,
@@ -463,7 +479,9 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
             fields[vol.Required(CONF_SPEED_COUNT, default=8)] = selector.NumberSelector(
                 selector.NumberSelectorConfig(min=1, max=8, step=1, mode=selector.NumberSelectorMode.SLIDER)
             )
-            fields[vol.Required(CONF_HAS_ON, default=False)] = selector.BooleanSelector()
+            fields[vol.Required(CONF_FAN_POWER_MODE, default=FAN_POWER_MODE_TOGGLE)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(options=FAN_POWER_MODE_OPTIONS)
+            )
         elif entity_type == ENTITY_TYPE_COVER:
             fields[vol.Required(CONF_HAS_STOP, default=True)] = selector.BooleanSelector()
         elif entity_type == ENTITY_TYPE_LIGHT:
@@ -521,6 +539,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
         self._pending: dict[str, Any] | None = None
         self._learn_error: str | None = None
         self._entity_type: str = ENTITY_TYPE_FAN
+        self._fan_power_mode: str = FAN_POWER_MODE_OFF_ONLY
         # State for add-entity wizard
         self._adding_entity_type: str = ENTITY_TYPE_BUTTON
         self._adding_name: str = ""
@@ -542,6 +561,10 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
         self._speed_count = entry.data.get(CONF_SPEED_COUNT, 0)
         self._direct = entry.data.get(CONF_DIRECT, False)
         self._entity_type = entry.data.get(CONF_ENTITY_TYPE, ENTITY_TYPE_FAN)
+        self._fan_power_mode = entry.data.get(
+            CONF_FAN_POWER_MODE,
+            FAN_POWER_MODE_ON_OFF if entry.data.get(CONF_HAS_ON, False) else FAN_POWER_MODE_OFF_ONLY,
+        )
         self._extra_buttons = list(entry.data.get("dc_extras", []))
         self._replay_mode = entry.data.get("replay_mode", "legacy")
 
@@ -560,6 +583,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
             menu_options=(
                 [
                     "relearn",
+                    "fan_power_settings",
                     *(["add_fan_speeds"] if self._speed_count < 8 else []),
                     "add_dc_features",
                     *(
@@ -582,6 +606,31 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
     # ------------------------------------------------------------------
     # Re-learn an existing button
     # ------------------------------------------------------------------
+
+    async def async_step_fan_power_settings(self, user_input=None) -> ConfigFlowResult:
+        """Choose whether fan power is toggle, Off-only, or separate On/Off."""
+        if user_input is not None:
+            self._fan_power_mode = user_input[CONF_FAN_POWER_MODE]
+            if (
+                self._fan_power_mode == FAN_POWER_MODE_ON_OFF
+                and CMD_ON not in self._commands
+            ):
+                self._adding_queue = [CMD_ON]
+                return await self.async_step_add_entity_learn()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="fan_power_settings",
+            data_schema=vol.Schema({
+                vol.Required(
+                    CONF_FAN_POWER_MODE,
+                    default=self._fan_power_mode,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=FAN_POWER_MODE_OPTIONS)
+                )
+            }),
+        )
+
     async def async_step_add_fan_speeds(self, user_input=None) -> ConfigFlowResult:
         """Learn additional discrete speeds while retaining existing commands."""
         if self._speed_count >= 8:
@@ -776,6 +825,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
 
             speed_count = 0
             has_on = False
+            fan_power_mode = FAN_POWER_MODE_OFF_ONLY
             has_stop = False
             light_mode = LIGHT_MODE_TOGGLE
             customs: list[dict] = []
@@ -783,7 +833,8 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
 
             if entity_type == ENTITY_TYPE_FAN:
                 speed_count = int(user_input.get(CONF_SPEED_COUNT, 8))
-                has_on = user_input.get(CONF_HAS_ON, False)
+                fan_power_mode = user_input.get(CONF_FAN_POWER_MODE, FAN_POWER_MODE_TOGGLE)
+                has_on = fan_power_mode == FAN_POWER_MODE_ON_OFF
             elif entity_type == ENTITY_TYPE_COVER:
                 has_stop = user_input.get(CONF_HAS_STOP, True)
             elif entity_type == ENTITY_TYPE_LIGHT:
@@ -796,6 +847,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
                 "key_prefix": self._adding_key_prefix,
                 "speed_count": speed_count,
                 "has_on": has_on,
+                "fan_power_mode": fan_power_mode,
                 "has_stop": has_stop,
                 "light_mode": light_mode,
             })
@@ -808,6 +860,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
                 entity_type,
                 speed_count=speed_count,
                 has_on=has_on,
+                fan_power_mode=fan_power_mode,
                 has_stop=has_stop,
                 light_mode=light_mode,
                 customs=customs,
@@ -824,7 +877,9 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
             fields[vol.Required(CONF_SPEED_COUNT, default=8)] = selector.NumberSelector(
                 selector.NumberSelectorConfig(min=1, max=8, step=1, mode=selector.NumberSelectorMode.SLIDER)
             )
-            fields[vol.Required(CONF_HAS_ON, default=False)] = selector.BooleanSelector()
+            fields[vol.Required(CONF_FAN_POWER_MODE, default=FAN_POWER_MODE_TOGGLE)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(options=FAN_POWER_MODE_OPTIONS)
+            )
         elif entity_type == ENTITY_TYPE_COVER:
             fields[vol.Required(CONF_HAS_STOP, default=True)] = selector.BooleanSelector()
         elif entity_type == ENTITY_TYPE_LIGHT:
@@ -872,6 +927,7 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
                     self.config_entry.data.get(CONF_HAS_ON, False)
                     and CMD_ON in self._commands
                 ),
+                CONF_FAN_POWER_MODE: self._fan_power_mode,
                 "dc_extras": self._extra_buttons,
                 "replay_mode": self._replay_mode,
                 "has_light": CMD_LIGHT in self._commands,

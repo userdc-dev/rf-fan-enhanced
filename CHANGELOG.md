@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- Added selectable fan power styles: one On/Off toggle, Off-only, or separate
+  On and Off buttons.
+
 ## 2.0.0
 
 First release of the enhanced fork maintained by
