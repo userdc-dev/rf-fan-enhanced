@@ -4,6 +4,7 @@
   "after_dependencies": [
     "broadlink",
     "frontend",
+    "http",
     "lovelace"
   ],
   "codeowners": [
