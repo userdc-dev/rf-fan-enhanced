@@ -1,3 +1,7 @@
+# 2.5.0 — 2026-10-28
+
+Added the reusable visual RF Fan Remote card, persistent Android/Companion App loading, automatic device discovery, stronger mobile fan separation, always-visible physical timer controls, Safe OFF, backend countdown timers, configurable light-cycle presets and supported config-entry cleanup. Existing RF signals and entity identities are retained.
+
 # 2.3.0 — 2026-10-28
 
 Alphabetical configuration, remote dashboard generation, per-command replay, batch relearning, command library, safe export/import, state correction, timers and diagnostics. Existing learned codes and entity identities are retained. See README for installation and usage.

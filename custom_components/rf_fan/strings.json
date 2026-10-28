@@ -126,7 +126,8 @@
         "description": "Select learned speed levels and the assumed state after a restart. This does not send RF.",
         "data": {
           "speed_count": "Speed levels",
-          "startup_state": "Startup state"
+          "startup_state": "Startup state",
+          "safe_off_enabled": "Enable Safe OFF (Speed 1, then power/off)"
         }
       },
       "diagnostics": {
@@ -344,7 +345,12 @@
         "description": "Select learned speed levels and the assumed state after a restart. This does not send RF.",
         "data": {
           "speed_count": "Speed levels",
-          "startup_state": "Startup state"
+          "startup_state": "Startup state",
+          "safe_off_enabled": "Enable Safe OFF (Speed 1, then power/off)",
+          "light_cycle_enabled": "Show light colour presets using repeated toggle presses",
+          "light_cycle_cool_clicks": "Cool white presses from Off",
+          "light_cycle_neutral_clicks": "Neutral white presses from Off",
+          "light_cycle_warm_clicks": "Warm white presses from Off"
         }
       },
       "diagnostics": {

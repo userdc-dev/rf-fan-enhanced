@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import math
 from datetime import datetime, timedelta, timezone
 import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_track_point_in_utc_time, async_track_time_interval
 from homeassistant.helpers import config_validation as cv
 from typing import Any
 
@@ -34,6 +35,9 @@ from .const import (
     CONF_FAN_POWER_MODE,
     CONF_HAS_ON,
     CONF_NAME,
+    CONF_LIGHT_CYCLE,
+    CONF_LIGHT_CYCLE_CLICKS,
+    CONF_SAFE_OFF,
     CONF_SPEED_COUNT,
     CONF_SUB_ENTITIES,
     CONF_TRANSMITTER,
@@ -51,7 +55,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the fan entity from a config entry."""
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service("set_timer", {vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440))}, "async_set_timer")
+    platform.async_register_entity_service("set_timer", {vol.Required("minutes"): vol.All(vol.Coerce(float), vol.Range(min=0))}, "async_set_timer")
+    platform.async_register_entity_service("safe_off", {}, "async_safe_off")
+    platform.async_register_entity_service("send_command", {vol.Required("command"): cv.string}, "async_send_command")
+    platform.async_register_entity_service("set_light_cycle", {
+        vol.Required("mode"): vol.In(["cool", "neutral", "warm"]),
+    }, "async_set_light_cycle")
     platform.async_register_entity_service("set_assumed_state", {
         vol.Required("state"): vol.In(["on", "off", "unknown"]),
         vol.Optional("percentage"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
@@ -137,6 +146,20 @@ class RfFan(FanEntity, RestoreEntity):
         self._startup_state = data.get("startup_state", "restore")
         self._timer_end = None
         self._timer_cancel = None
+        self._timer_tick_cancel = None
+        self._safe_off_lock = asyncio.Lock()
+        self._safe_off_enabled = bool(
+            data.get(CONF_SAFE_OFF, self._pk("speed_1") in self._commands and self._pk(CMD_OFF) in self._commands)
+        )
+        self._light_cycle_enabled = bool(
+            data.get(CONF_LIGHT_CYCLE, self._pk("light") in self._commands)
+        )
+        self._light_cycle_clicks = {
+            "cool": 1,
+            "neutral": 3,
+            "warm": 5,
+            **data.get(CONF_LIGHT_CYCLE_CLICKS, {}),
+        }
         self._state_uncertain = True
         self._attr_is_on = None
         self._attr_percentage = None
@@ -169,7 +192,11 @@ class RfFan(FanEntity, RestoreEntity):
             deadline = last.attributes.get("timer_end")
             if deadline:
                 try:
-                    self._schedule_timer(datetime.fromisoformat(deadline))
+                    parsed = datetime.fromisoformat(deadline)
+                    if parsed > datetime.now(timezone.utc):
+                        self._schedule_timer(parsed)
+                    else:
+                        self.hass.async_create_task(self._async_timer_expired())
                 except ValueError:
                     pass
 
@@ -246,21 +273,67 @@ class RfFan(FanEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self._timer_cancel:
-            self._timer_cancel()
-            self._timer_cancel = None
-        self._timer_end = None
+        self._cancel_timer()
         if self._power_mode != FAN_POWER_MODE_TOGGLE or self._attr_is_on is not False:
             await self._send(self._pk(CMD_OFF))
         self._attr_is_on = False
         self._attr_percentage = 0
         self.async_write_ha_state()
 
+    async def async_safe_off(self) -> None:
+        """Reliably stop a compatible fan without claiming RF feedback."""
+        if not self._safe_off_enabled:
+            raise HomeAssistantError("Safe OFF is disabled for this fan")
+        if self._safe_off_lock.locked():
+            return
+        async with self._safe_off_lock:
+            await self._send(self._pk("speed_1"))
+            await asyncio.sleep(1)
+            await self._send(self._pk(CMD_OFF))
+            self._cancel_timer()
+            self._attr_is_on = False
+            self._attr_percentage = 0
+            self._state_uncertain = True
+            self.async_write_ha_state()
+
+    async def async_send_command(self, command: str) -> None:
+        """Send one configured command for reusable remote controls."""
+        if command not in self._commands:
+            raise HomeAssistantError(f"Command '{command}' not learned")
+        if self._key_prefix and not command.startswith(f"{self._key_prefix}_"):
+            raise HomeAssistantError("Command does not belong to this fan")
+        await self._send(command)
+        self.async_write_ha_state()
+
+    async def async_set_light_cycle(self, mode: str) -> None:
+        """Replay the existing light toggle a configured number of times."""
+        key = self._pk("light")
+        if not self._light_cycle_enabled or key not in self._commands:
+            raise HomeAssistantError("Light-cycle presets are disabled for this fan")
+        clicks = int(self._light_cycle_clicks[mode])
+        for index in range(clicks):
+            await self._send(key)
+            if index + 1 < clicks:
+                await asyncio.sleep(0.35)
+        self._state_uncertain = True
+        self.async_write_ha_state()
+
+    async def _async_timer_expired(self) -> None:
+        """Use Safe OFF when enabled, otherwise retain normal turn-off."""
+        if self._safe_off_enabled:
+            await self.async_safe_off()
+        else:
+            await self.async_turn_off()
+
 
     @property
     def extra_state_attributes(self):
+        remaining = max(0, int((self._timer_end - datetime.now(timezone.utc)).total_seconds())) if self._timer_end else 0
         return {"state_uncertain": self._state_uncertain,
+                "safe_off_enabled": self._safe_off_enabled,
                 "timer_end": self._timer_end.isoformat() if self._timer_end else None,
+                "timer_remaining": str(timedelta(seconds=remaining)),
+                "timer_remaining_seconds": remaining,
                 "last_transmission": self.hass.data.get("rf_fan_runtime", {}).get("last_send", {}).get(self._transmitter)}
 
     async def async_set_assumed_state(self, state, percentage=None, direction=None):
@@ -295,27 +368,38 @@ class RfFan(FanEntity, RestoreEntity):
             self.async_write_ha_state()
 
     def _schedule_timer(self, deadline):
-        if self._timer_cancel:
-            self._timer_cancel()
+        self._cancel_timer()
         self._timer_end = deadline
         @callback
         def expire(now):
             self._timer_cancel = None
+            if self._timer_tick_cancel:
+                self._timer_tick_cancel()
+                self._timer_tick_cancel = None
             self._timer_end = None
-            self.hass.async_create_task(self.async_turn_off())
+            self.async_write_ha_state()
+            self.hass.async_create_task(self._async_timer_expired())
+        @callback
+        def tick(now):
+            self.async_write_ha_state()
         self._timer_cancel = async_track_point_in_utc_time(self.hass, expire, deadline)
+        self._timer_tick_cancel = async_track_time_interval(self.hass, tick, timedelta(seconds=1))
 
-    async def async_set_timer(self, minutes):
+    def _cancel_timer(self):
         if self._timer_cancel:
             self._timer_cancel()
             self._timer_cancel = None
+        if self._timer_tick_cancel:
+            self._timer_tick_cancel()
+            self._timer_tick_cancel = None
         self._timer_end = None
+
+    async def async_set_timer(self, minutes):
+        self._cancel_timer()
         if minutes:
             self._schedule_timer(datetime.now(timezone.utc) + timedelta(minutes=minutes))
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
-        if self._timer_cancel:
-            self._timer_cancel()
-            self._timer_cancel = None
+        self._cancel_timer()
         await super().async_will_remove_from_hass()

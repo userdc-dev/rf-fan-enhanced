@@ -12,8 +12,42 @@ set_timer:
       selector:
         number:
           min: 0
-          max: 1440
+          step: 0.1
           mode: box
+safe_off:
+  name: Safe OFF
+  description: Send Speed 1, wait about one second, then send the configured power/off command. State remains assumed.
+  target:
+    entity:
+      integration: rf_fan
+      domain: fan
+send_command:
+  name: Send configured RF command
+  description: Send an existing learned command without changing or relearning it.
+  target:
+    entity:
+      integration: rf_fan
+      domain: fan
+  fields:
+    command:
+      name: Command key
+      required: true
+      selector:
+        text:
+set_light_cycle:
+  name: Set light colour by toggle count
+  description: Starting with the light physically off, replay its existing toggle command the configured number of times for the selected colour. RF state remains assumed.
+  target:
+    entity:
+      integration: rf_fan
+      domain: fan
+  fields:
+    mode:
+      name: Colour preset
+      required: true
+      selector:
+        select:
+          options: ["cool", "neutral", "warm"]
 set_assumed_state:
   name: Correct fan assumed state
   description: Correct the displayed state without sending RF.

@@ -14,8 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_CUSTOMS, CONF_SUB_ENTITIES, ENTITY_TYPE_BUTTON
+from .const import CONF_CUSTOMS, CONF_SUB_ENTITIES, DOMAIN, ENTITY_TYPE_BUTTON, EVENT_UPDATED
 from .dashboard import async_restore_dashboard
+from .frontend import async_setup_frontend
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,17 +63,36 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    await async_setup_frontend(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_restore_dashboard(hass)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    hass.bus.async_fire(EVENT_UPDATED)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        hass.bus.async_fire(EVENT_UPDATED)
+    return unloaded
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove integration-owned runtime state after permanent deletion."""
+    hass.bus.async_fire(EVENT_UPDATED)
+
+
+async def async_remove_config_entry_device(hass, config_entry, device_entry) -> bool:
+    """A device is one RF remote; deleting it removes its owning entry."""
+    if (DOMAIN, config_entry.entry_id) not in device_entry.identifiers:
+        return False
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the entry when its options change (e.g. after re-learning)."""
     await hass.config_entries.async_reload(entry.entry_id)
+    hass.bus.async_fire(EVENT_UPDATED)

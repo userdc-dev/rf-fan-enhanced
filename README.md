@@ -14,7 +14,16 @@ Download in HACS, restart Home Assistant, then add your RF remote:
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
-## What is new in 2.3.0
+## What is new in 2.5.0
+
+- **Reusable RF Fan Remote card:** add it from the normal card picker, select a fan and save. The dedicated sidebar dashboard discovers configured fans automatically on desktop and in the Android Companion app.
+- **Compact mobile remote:** clearly separated fan panels, responsive controls, visible physical RF timer buttons and no unnecessary Advanced section.
+- **Safe OFF:** optionally sends Speed 1, waits about one second, then sends the existing power/off command. Overlapping shutdown sequences are prevented.
+- **Custom software timer:** arbitrary minutes or hours, live backend countdown, cancel/restart and sensible restart restoration. Expiry uses Safe OFF when enabled.
+- **Light-cycle presets:** for toggle-only lights, configurable Cool/Neutral/Warm presets replay the existing light command 1×/3×/5× by default. Start with the physical light off; RF state is still assumed.
+- **Automatic cleanup:** removing an RF Fan device uses Home Assistant's config-entry APIs and never removes a shared Broadlink or user-created automation/dashboard.
+
+Previous 2.3 features remain available:
 
 - **Remote dashboard:** Configure → Create / refresh remote dashboard → Submit. Controls are generated from your own registered devices and added to the sidebar. No dashboard YAML editing is needed.
 - **Alphabetical Configure menu:** Save changes stays at the bottom, with a review before saving.
@@ -32,7 +41,7 @@ If HACS does not discover the repository automatically, add `https://github.com/
 
 Open **Settings → Devices & services → RF Fan Enhanced → Configure** next to your remote. Menu choices are alphabetical.
 
-For a dashboard, choose **Create / refresh remote dashboard**, then **Submit**. Open **RF Fan remotes** in the sidebar. Refresh it after saving additional learned buttons. Refreshing keeps a backup of the previously generated dashboard. Manual edits to that generated dashboard are replaced on refresh.
+Open **RF Fan remotes** in the sidebar. It updates automatically when fans, names, speed counts or commands change. On another dashboard, choose **Add card → RF Fan Remote → Select Fan → Save**.
 
 For command edits, choose **Remote command manager**. Testing sends RF immediately; saving a replay selection only changes the pending configuration. Finish with **Save changes**.
 
@@ -52,6 +61,8 @@ RF is one-way. A successful transmission does not prove that the fan responded. 
 ## Actions
 
 - `rf_fan.set_timer`: target a fan and set `minutes` to a delay, such as `120`; `0` cancels. Default restored-state startup behavior also restores the timer.
+- `rf_fan.safe_off`: send Speed 1, wait about one second, then send the existing power/off command.
+- `rf_fan.set_light_cycle`: starting with the physical light off, select `cool`, `neutral` or `warm` to replay the configured number of light-toggle presses.
 - `rf_fan.set_assumed_state`: set fan `state` to `on`, `off` or `unknown`, with optional `percentage` and `direction` (`forward`, `reverse` or `unknown`). Does not transmit. Confirm direction before using an absolute direction action on a toggle-only remote.
 - `rf_fan.set_light_assumed_state`: correct the displayed light `state` without transmitting.
 

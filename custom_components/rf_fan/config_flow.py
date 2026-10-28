@@ -52,6 +52,9 @@ from .const import (
     CONF_HAS_STOP,
     CONF_LIGHT_MODE,
     CONF_NAME,
+    CONF_LIGHT_CYCLE,
+    CONF_LIGHT_CYCLE_CLICKS,
+    CONF_SAFE_OFF,
     CONF_SPEED_COUNT,
     CONF_SUB_ENTITIES,
     CONF_TRANSMITTER,
@@ -690,6 +693,17 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
         )
         self._extra_buttons = list(entry.data.get("dc_extras", []))
         self._startup_state = entry.data.get("startup_state", "restore")
+        self._safe_off_enabled = bool(entry.data.get(
+            CONF_SAFE_OFF,
+            "speed_1" in self._commands and CMD_OFF in self._commands,
+        ))
+        self._light_cycle_enabled = bool(entry.data.get(CONF_LIGHT_CYCLE, CMD_LIGHT in self._commands))
+        self._light_cycle_clicks = {
+            "cool": 1,
+            "neutral": 3,
+            "warm": 5,
+            **entry.data.get(CONF_LIGHT_CYCLE_CLICKS, {}),
+        }
         self._replay_mode = entry.data.get("replay_mode", "legacy")
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
@@ -1068,6 +1082,9 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
                 "dc_extras": self._extra_buttons,
                 "replay_mode": self._replay_mode,
                 "startup_state": self._startup_state,
+                CONF_SAFE_OFF: self._safe_off_enabled,
+                CONF_LIGHT_CYCLE: self._light_cycle_enabled,
+                CONF_LIGHT_CYCLE_CLICKS: self._light_cycle_clicks,
                 "has_light": CMD_LIGHT in self._commands,
             },
         )
@@ -1260,14 +1277,31 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
             else:
                 self._speed_count = count
                 self._startup_state = user_input["startup_state"]
+                self._safe_off_enabled = bool(user_input[CONF_SAFE_OFF])
+                if CMD_LIGHT in self._commands:
+                    self._light_cycle_enabled = bool(user_input[CONF_LIGHT_CYCLE])
+                    self._light_cycle_clicks = {
+                        "cool": int(user_input["light_cycle_cool_clicks"]),
+                        "neutral": int(user_input["light_cycle_neutral_clicks"]),
+                        "warm": int(user_input["light_cycle_warm_clicks"]),
+                    }
                 return await self.async_step_init()
-        return self.async_show_form(step_id="fan_settings", errors=errors, data_schema=vol.Schema({
+        fields = {
             vol.Required("speed_count", default=self._speed_count): selector.NumberSelector(selector.NumberSelectorConfig(min=1, max=8, step=1)),
             vol.Required("startup_state", default=self._startup_state): selector.SelectSelector(selector.SelectSelectorConfig(options=[
                 {"value": "restore", "label": "Restore last assumed state"},
                 {"value": "unknown", "label": "Unknown until a command or correction"},
-                {"value": "off", "label": "Assume off (does not send RF)"}]))
-        }))
+                {"value": "off", "label": "Assume off (does not send RF)"}])),
+            vol.Required(CONF_SAFE_OFF, default=self._safe_off_enabled): selector.BooleanSelector(),
+        }
+        if CMD_LIGHT in self._commands:
+            fields.update({
+                vol.Required(CONF_LIGHT_CYCLE, default=self._light_cycle_enabled): selector.BooleanSelector(),
+                vol.Required("light_cycle_cool_clicks", default=self._light_cycle_clicks["cool"]): selector.NumberSelector(selector.NumberSelectorConfig(min=1, max=12, step=1)),
+                vol.Required("light_cycle_neutral_clicks", default=self._light_cycle_clicks["neutral"]): selector.NumberSelector(selector.NumberSelectorConfig(min=1, max=12, step=1)),
+                vol.Required("light_cycle_warm_clicks", default=self._light_cycle_clicks["warm"]): selector.NumberSelector(selector.NumberSelectorConfig(min=1, max=12, step=1)),
+            })
+        return self.async_show_form(step_id="fan_settings", errors=errors, data_schema=vol.Schema(fields))
 
     async def async_step_diagnostics(self, user_input=None):
         if user_input is not None:
