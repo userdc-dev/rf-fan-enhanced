@@ -25,6 +25,12 @@ for userdc-dev's Home Assistant fan setup:
 
 ## Installation with HACS
 
+[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=userdc-dev&repository=rf-fan-enhanced&category=integration)
+
+After downloading and restarting Home Assistant:
+
+[![Add RF Fan Enhanced to Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
+
 1. Install HACS in Home Assistant.
 2. Open **HACS → Integrations → Custom repositories**.
 3. Add `https://github.com/userdc-dev/rf-fan-enhanced` with category
