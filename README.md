@@ -25,8 +25,28 @@ for userdc-dev's Home Assistant fan setup:
 
 ## Installation with HACS
 
-Add this repository to HACS as a custom repository with category
-**Integration**, install **RF Fan Enhanced**, and restart Home Assistant.
+1. Install HACS in Home Assistant.
+2. Open **HACS → Integrations → Custom repositories**.
+3. Add `https://github.com/userdc-dev/rf-fan-enhanced` with category
+   **Integration**.
+4. Open **RF Fan Enhanced**, select **Download**, and restart Home Assistant.
+5. Open **Settings → Devices & services → Add integration**, search for
+   **RF Fan Enhanced**, and follow the learning wizard.
+
+The repository follows the standard HACS layout and is checked automatically
+with both the HACS validator and Home Assistant's hassfest validator.
+
+## Backup and disaster recovery
+
+The GitHub repository permanently preserves the integration itself, so it can
+be reinstalled on a completely new Home Assistant system using the steps above.
+
+Learned RF commands are specific to your remotes and are stored in Home
+Assistant's configuration entries, not in GitHub. To restore those commands
+without relearning them, keep a regular Home Assistant backup that includes
+the `.storage` configuration data. If no Home Assistant backup survives, the
+integration can still be reinstalled from GitHub, but each remote command must
+be learned again.
 
 ## Requirements
 
