@@ -1,0 +1,51 @@
+set_timer:
+  name: Fan software timer
+  description: Turn off this fan after a delay. Zero cancels. Restores after Home Assistant restarts. RF state remains assumed.
+  target:
+    entity:
+      integration: rf_fan
+      domain: fan
+  fields:
+    minutes:
+      name: Minutes
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1440
+          mode: box
+set_assumed_state:
+  name: Correct fan assumed state
+  description: Correct the displayed state without sending RF.
+  target:
+    entity:
+      integration: rf_fan
+      domain: fan
+  fields:
+    state:
+      required: true
+      selector:
+        select:
+          options: ["on", "off", "unknown"]
+    percentage:
+      selector:
+        number:
+          min: 0
+          max: 100
+    direction:
+      selector:
+        select:
+          options: ["forward", "reverse", "unknown"]
+set_light_assumed_state:
+  name: Correct light assumed state
+  description: Correct the displayed light state without sending RF.
+  target:
+    entity:
+      integration: rf_fan
+      domain: light
+  fields:
+    state:
+      required: true
+      selector:
+        select:
+          options: ["on", "off", "unknown"]

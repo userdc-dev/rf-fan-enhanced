@@ -15,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_CUSTOMS, CONF_SUB_ENTITIES, ENTITY_TYPE_BUTTON
+from .dashboard import async_restore_dashboard
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_restore_dashboard(hass)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 

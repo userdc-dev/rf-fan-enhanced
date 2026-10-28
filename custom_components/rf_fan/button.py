@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.helpers import entity_registry as er
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -52,6 +53,11 @@ async def async_setup_entry(
         if key != "light" and key in EXTRA_BUTTONS and key in commands:
             if f"{entry.entry_id}_{key}" not in existing:
                 entities.append(RfButton(entry, name=EXTRA_BUTTONS[key], key=key))
+    # A stateless toggle remains useful even when the optimistic light is disabled.
+    if "light" in commands:
+        entities.append(RfButton(entry, name="Light toggle", key="light"))
+    seen = set()
+    entities = [e for e in entities if not (e.unique_id in seen or seen.add(e.unique_id))]
     if entities:
         async_add_entities(entities)
 
@@ -68,7 +74,7 @@ class RfButton(ButtonEntity):
         self._frequency = entry.data[CONF_FREQUENCY]
         self._direct = entry.data.get(CONF_DIRECT, False)
         self._replay_mode = entry.data.get("replay_mode", "legacy")
-        self._attr_name = name
+        self._attr_name = self._command.get("label", name)
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

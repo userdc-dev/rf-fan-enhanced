@@ -1,69 +1,76 @@
 # RF Fan Enhanced
 
-A Home Assistant custom integration for learning and replaying ceiling-fan RF
-remote controls through an RF-capable Broadlink device.
+Learn and control RF ceiling fans and remote buttons from Home Assistant using an RF-capable Broadlink device.
 
-This fork is maintained by [@userdc-dev](https://github.com/userdc-dev). It
-extends the original `clevrdavid/rf_fan` integration with improvements created
-for userdc-dev's Home Assistant fan setup:
+## Install
 
-- English setup and configuration screens
-- Up to eight learned fan speeds with slider control
-- Optional timer, direction, swing, breeze and light-related buttons
-- Fan lights default to one learned On/Off toggle command, matching most fan
-  remotes; separate On and Off commands are also supported when the remote has
-  two distinct light buttons
-- Fan power supports one On/Off toggle button, an Off-only button with speeds
-  used to turn on, or separate On and Off buttons
-- The initial fan wizard can learn light controls, colour and brightness
-  buttons, timers, direction, oscillation, swing air and natural breeze in one
-  guided setup; the Configure menu remains available for later changes
-- Safe addition and re-learning of individual controls
-- A preselected learned-button checklist with confirmed, clean removal
-- Per-device raw or filtered RF replay so non-Mercator fans remain reliable
-- Preservation of existing learned commands during upgrades and configuration
+[![Open RF Fan Enhanced in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=userdc-dev&repository=rf-fan-enhanced&category=integration)
 
-## Installation with HACS
+Download in HACS, restart Home Assistant, then add your RF remote:
 
-[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=userdc-dev&repository=rf-fan-enhanced&category=integration)
+[![Add RF Fan Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
 
-After downloading and restarting Home Assistant:
+**Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured RF-capable Broadlink RM Pro / RM4 Pro. Your transmitter must appear as a `radio_frequency` entity. RF commands need to be learned from your own remote.
 
-[![Add RF Fan Enhanced to Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
+If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
-1. Install HACS in Home Assistant.
-2. Open **HACS → Integrations → Custom repositories**.
-3. Add `https://github.com/userdc-dev/rf-fan-enhanced` with category
-   **Integration**.
-4. Open **RF Fan Enhanced**, select **Download**, and restart Home Assistant.
-5. Open **Settings → Devices & services → Add integration**, search for
-   **RF Fan Enhanced**, and follow the learning wizard.
+## What is new in 2.3.0
 
-The repository follows the standard HACS layout and is checked automatically
-with both the HACS validator and Home Assistant's hassfest validator.
+- **Remote dashboard:** Configure → Create / refresh remote dashboard → Submit. Controls are generated from your own registered devices and added to the sidebar. No dashboard YAML editing is needed.
+- **Alphabetical Configure menu:** Save changes stays at the bottom, with a review before saving.
+- **Command manager:** inspect learned buttons, rename labels, test commands and copy/reassign signals without deleting the source.
+- **Per-command replay:** Original Broadlink packet, Captured timings or Mercator filtering. Existing integration behavior remains available for compatibility. Test a mode and confirm the physical response before keeping it.
+- **Batch relearning:** select several buttons; test, retry or skip each one. Optional selections start empty. Existing commands and playback selections are retained until you replace them and save.
+- **Command library:** reuse learned commands between remotes on the same RF carrier frequency.
+- **Backup / export / import:** private snapshots before options commits, checksummed command exports, validation and explicit overwrite protection.
+- **State correction:** unknown/assumed states, configurable fan startup behavior, and correction actions that do not transmit.
+- **Light toggle button:** a stateless single press that works independently of the optimistic light entity.
+- **Fan controls and timers:** 1–8 speed levels, selectable power-button styles, optional DC buttons, native direction/oscillation where learned, and cancellable software timers alongside learned physical timers.
+- **Diagnostics:** pulse counts, replay modes, fingerprints and transmission results without exposing replayable packets in diagnostics.
 
-## Backup and disaster recovery
+## Everyday use
 
-The GitHub repository permanently preserves the integration itself, so it can
-be reinstalled on a completely new Home Assistant system using the steps above.
+Open **Settings → Devices & services → RF Fan Enhanced → Configure** next to your remote. Menu choices are alphabetical.
 
-Learned RF commands are specific to your remotes and are stored in Home
-Assistant's configuration entries, not in GitHub. To restore those commands
-without relearning them, keep a regular Home Assistant backup that includes
-the `.storage` configuration data. If no Home Assistant backup survives, the
-integration can still be reinstalled from GitHub, but each remote command must
-be learned again.
+For a dashboard, choose **Create / refresh remote dashboard**, then **Submit**. Open **RF Fan remotes** in the sidebar. Refresh it after saving additional learned buttons. Refreshing keeps a backup of the previously generated dashboard. Manual edits to that generated dashboard are replaced on refresh.
 
-## Requirements
+For command edits, choose **Remote command manager**. Testing sends RF immediately; saving a replay selection only changes the pending configuration. Finish with **Save changes**.
 
-- Home Assistant 2026.5 or newer
-- An RF-capable Broadlink already configured in Home Assistant
+For several buttons, choose **Batch learn / relearn buttons**, select only the ones you want, and work through the queue. Retry or skip without erasing the previously saved signal.
 
-## Attribution
+## Replay modes
 
-The original integration was created by
-[@clevrdavid](https://github.com/clevrdavid) at
-[clevrdavid/rf_fan](https://github.com/clevrdavid/rf_fan). This enhanced fork
-is maintained by [@userdc-dev](https://github.com/userdc-dev) and remains
-distributed under the original MIT License.
+| Mode | Behavior |
+|---|---|
+| Original Broadlink packet | Replays the saved packet byte-for-byte through the selected Broadlink. Available when an original packet was captured. |
+| Captured timings | Replays captured pulse timings with idle-edge trimming and no Mercator filter. |
+| Mercator filtered | Sends a consensus frame with repeats; reports when no compatible frame is found. |
+| Original integration behavior | Preserves the legacy processing selected by the entry's learning configuration. |
 
+RF is one-way. A successful transmission does not prove that the fan responded. External remote use can make the displayed state inaccurate. Confirm the response yourself or use independent feedback.
+
+## Actions
+
+- `rf_fan.set_timer`: target a fan and set `minutes` to a delay, such as `120`; `0` cancels. Default restored-state startup behavior also restores the timer.
+- `rf_fan.set_assumed_state`: set fan `state` to `on`, `off` or `unknown`, with optional `percentage` and `direction` (`forward`, `reverse` or `unknown`). Does not transmit. Confirm direction before using an absolute direction action on a toggle-only remote.
+- `rf_fan.set_light_assumed_state`: correct the displayed light `state` without transmitting.
+
+Standard fan/light entities can be exposed by Matter Hub or other Home Assistant bridges. Individual bridge capabilities vary; this release does not claim end-to-end Google Home or Alexa certification.
+
+## Upgrades and backups
+
+The domain remains `rf_fan`; do not remove your configured devices to upgrade. Existing command data and entity identities are preserved. Back up Home Assistant before changing integration sources.
+
+Private automatic snapshots are stored under `rf_fan_safety` in your Home Assistant configuration folder. Command exports contain replayable RF signals; keep them private. Diagnostics omit those signals. The generated dashboard stores entity controls only.
+
+This integration and the original `rf_fan` integration share a domain, so install one implementation at a time.
+
+## Validation
+
+The release was checked against Home Assistant 2026.9.2, including regression checks using existing learned records and an isolated startup test of fans, lights, actions and dashboard creation. Hardware confirmation is remote-specific; alternate replay modes, new learning and physical timer expiry require testing with your own devices.
+
+Repository workflows run HACS validation, Home Assistant hassfest and portable command-exchange tests.
+
+## Credits and licence
+
+Maintained by [@userdc-dev](https://github.com/userdc-dev), based on [clevrdavid/rf_fan](https://github.com/clevrdavid/rf_fan). MIT licence; original attribution is retained in [LICENSE](LICENSE).

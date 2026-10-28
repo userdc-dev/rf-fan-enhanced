@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from typing import Any
+from base64 import b64decode
+from datetime import datetime, timezone
+import asyncio
 
 from rf_protocols import ModulationType, RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .mercator import clean_frame
 
@@ -67,6 +72,7 @@ async def async_send_stored(
     *,
     clean: bool = False,
     repeat: int = 0,
+    mode: str | None = None,
 ) -> None:
     """Send a stored command dict (``{"timings"}``) via a transmitter.
 
@@ -76,11 +82,64 @@ async def async_send_stored(
     fussy Manchester remotes (e.g. Mercator FRM97) whose raw captures contain
     noisy frames.
     """
-    if clean:
-        timings = clean_frame(data["timings"]) or _trim_idle(data["timings"])
+    mode = mode or data.get("replay_mode")
+    if mode == "legacy" and "legacy_clean" in data:
+        clean = bool(data["legacy_clean"])
+        repeat = 10 if clean else 0
+    if mode not in (None, "legacy", "original", "raw", "clean"):
+        raise HomeAssistantError("Unknown RF replay mode")
+    if mode == "original":
+        if not data.get("b64"):
+            raise HomeAssistantError("Original Broadlink packet is unavailable; use Captured")
+        try:
+            packet = b64decode(data["b64"], validate=True)
+        except (ValueError, TypeError) as err:
+            raise HomeAssistantError("Invalid original Broadlink packet") from err
+        if len(packet) < 5 or packet[0] not in (0xB0, 0xB1, 0xB2, 0xB4, 0xD7):
+            raise HomeAssistantError("Invalid RF packet header")
+        if int.from_bytes(packet[2:4], "little") > len(packet) - 4:
+            raise HomeAssistantError("Truncated original RF packet")
+        registry_entry = er.async_get(hass).async_get(transmitter)
+        devices = getattr(hass.data.get("broadlink"), "devices", {})
+        device = devices.get(registry_entry.config_entry_id) if registry_entry else None
+        if device is None:
+            raise HomeAssistantError("Selected Broadlink transmitter is unavailable")
+        async def send():
+            await device.async_request(device.api.send_data, packet)
     else:
-        timings = _trim_idle(data["timings"])
-    command = CapturedCommand(
-        frequency=frequency, timings=timings, repeat_count=repeat
-    )
-    await async_send_command(hass, transmitter, command)
+        if mode == "raw":
+            clean, repeat = False, 0
+        elif mode == "clean":
+            clean, repeat = True, 10
+        timings = list(data.get("timings", []))
+        if not timings or any(type(t) is not int or not 0 < abs(t) <= 2_000_000 for t in timings):
+            raise HomeAssistantError("Invalid captured RF timings")
+        if clean:
+            timings = clean_frame(timings)
+            if not timings:
+                # Legacy entries historically fell back to captured timings.
+                if mode == "clean":
+                    raise HomeAssistantError("No Mercator consensus frame found; use Captured")
+                timings = _trim_idle(data["timings"])
+        else:
+            timings = _trim_idle(timings)
+        if not timings:
+            raise HomeAssistantError("RF capture contains only idle gaps")
+        command = CapturedCommand(frequency=frequency, timings=timings, repeat_count=repeat)
+        async def send():
+            await async_send_command(hass, transmitter, command)
+    runtime = hass.data.setdefault("rf_fan_runtime", {})
+    lock = runtime.setdefault("locks", {}).setdefault(transmitter, asyncio.Lock())
+    status = {"mode": mode or "legacy", "time": datetime.now(timezone.utc).isoformat()}
+    try:
+        async with lock:
+            await send()
+    except Exception as err:
+        status["result"] = "failed"
+        status["error_type"] = type(err).__name__
+        raise HomeAssistantError(f"RF transmission failed: {type(err).__name__}") from err
+    else:
+        status["result"] = "sent_unconfirmed"
+    finally:
+        runtime.setdefault("last_send", {})[transmitter] = status
+    return

@@ -1,0 +1,388 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an RF device",
+        "description": "Name the device, pick its primary entity type, and choose which RF transmitter to use.",
+        "data": {
+          "name": "Device name",
+          "entity_type": "Primary entity type",
+          "transmitter": "RF transmitter",
+          "frequency": "Frequency"
+        }
+      },
+      "entity_options": {
+        "title": "Options for {entity_type}",
+        "description": "Configure the specific options for this entity. You'll learn each button next.",
+        "data": {
+          "speed_count": "Number of speeds",
+          "fan_power_mode": "Fan power control type",
+          "fan_light_mode": "Does your fan have a light? How is it switched?",
+          "fan_light_extras": "Optional light buttons (colour cycle, colour presets, brightness)",
+          "fan_timer_buttons": "Timer buttons to learn",
+          "has_direction": "Fan has a direction/reverse button",
+          "has_oscillation": "Fan has a physical oscillation button",
+          "has_swing_air": "Fan has a swing air/breeze toggle",
+          "has_natural_breeze": "Fan has a natural breeze/wind mode",
+          "has_on_button": "Remote has a separate On button",
+          "has_stop_button": "Remote has a Stop button",
+          "light_mode": "Light control type",
+          "direct_capture": "Skip the frequency sweep (try this if the remote won't detect)"
+        }
+      },
+      "learn_press": {
+        "title": "Release, then press again",
+        "description": "Locked onto the **{button}** button's signal. Let go of it now. Then select **Submit** and press **{button}** once more to capture the code."
+      },
+      "learn_result": {
+        "title": "Captured",
+        "description": "Got {pulses} pulses for the **{button}** button. Send it to test, keep it, or try again.",
+        "menu_options": {
+          "confirm": "Keep and continue",
+          "test": "Test (send it now)",
+          "retry": "Retry this button",
+          "skip": "Skip and keep any previous signal",
+          "choose_test_mode": "Choose and test a replay mode"
+        }
+      },
+      "learn_error": {
+        "title": "Nothing captured",
+        "description": "No code came through for the **{button}** button ({error}). Try again, or capture without the frequency sweep \u2014 that works for remotes the sweep can't lock onto (just one press at the set frequency).",
+        "menu_options": {
+          "retry": "Try again",
+          "retry_direct": "Capture without the sweep",
+          "skip": "Skip and keep any previous signal"
+        }
+      },
+      "remote_manager": {
+        "title": "Remote command manager",
+        "description": "Select a learned button to inspect, test, rename or reassign.",
+        "data": {
+          "command": "Learned button"
+        }
+      },
+      "manage_command": {
+        "title": "Manage button",
+        "description": "Testing transmits immediately. Confirm the physical response before keeping a mode. Changes are saved with Save changes in the main menu.",
+        "data": {
+          "mode": "Replay mode",
+          "action": "Action"
+        }
+      },
+      "choose_test_mode": {
+        "title": "Test replay mode",
+        "description": "Select a mode, then confirm whether the fan physically responds.",
+        "data": {
+          "mode": "Replay mode"
+        }
+      },
+      "test": {
+        "title": "Transmission failed",
+        "description": "Check the selected mode and transmitter. Submit to return without saving.",
+        "data": {}
+      },
+      "reassign": {
+        "title": "Reassign command",
+        "description": "Copy the signal to a different function. The source remains available.",
+        "data": {
+          "target": "Destination function",
+          "overwrite": "Replace an existing learned signal"
+        }
+      },
+      "rename_command": {
+        "title": "Rename button",
+        "description": "Changes the displayed button label while keeping its identity.",
+        "data": {
+          "name": "Button label"
+        }
+      },
+      "command_library": {
+        "title": "Command library",
+        "description": "Reuse a command from another remote with the same RF frequency.",
+        "data": {
+          "source_entry": "Source remote"
+        }
+      },
+      "library_copy": {
+        "title": "Copy library command",
+        "description": "Enter a function key such as speed_2, timer_2h, or a new custom button key.",
+        "data": {
+          "source_command": "Source button",
+          "target": "Destination function key",
+          "overwrite": "Replace existing signal"
+        }
+      },
+      "export_import": {
+        "title": "Backup / export / import",
+        "description": "Copy the export text to a file for safekeeping. Paste an export below to merge signals. Submit without import text to return. All changes remain pending until Save changes.",
+        "data": {
+          "export_json": "Command export (copy and save)",
+          "import_json": "Import command export",
+          "overwrite": "Allow replacing existing signals"
+        }
+      },
+      "fan_settings": {
+        "title": "Fan and startup settings",
+        "description": "Select learned speed levels and the assumed state after a restart. This does not send RF.",
+        "data": {
+          "speed_count": "Speed levels",
+          "startup_state": "Startup state"
+        }
+      },
+      "diagnostics": {
+        "title": "Signal diagnostics",
+        "description": "{summary}",
+        "data": {}
+      },
+      "finish": {
+        "title": "Save changes",
+        "description": "{summary}\nA private backup is created before saving. Submit to apply changes.",
+        "data": {}
+      }
+    },
+    "progress": {
+      "sweep": "Press and hold the **{button}** button on your remote, and keep holding until the next screen appears.",
+      "capture": "Now press the **{button}** button once to capture it.",
+      "press": "Press the **{button}** button on your remote once now to capture it."
+    },
+    "abort": {
+      "no_rf_device": "No RF-capable Broadlink device found. Set up your RM4 Pro (or similar) in the Broadlink integration first.",
+      "invalid_import": "The command source is unavailable or incompatible."
+    },
+    "error": {
+      "learn_failed": "Learning failed. Please try again.",
+      "send_failed": "Transmission failed. No physical response has been confirmed. Try another mode or check the transmitter.",
+      "overwrite_required": "Tick the replacement checkbox to overwrite an existing signal.",
+      "invalid_import": "Invalid export, checksum, command format or RF frequency.",
+      "missing_speeds": "Learn all requested speeds first, using Add fan speeds."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure RF device",
+        "menu_options": {
+          "relearn": "Batch learn / relearn buttons",
+          "fan_power_settings": "Fan power button style",
+          "add_entity": "Add a new entity",
+          "finish": "Save changes",
+          "add_fan_speeds": "Add more fan speeds",
+          "add_dc_features": "Learn extra fan buttons",
+          "remove_commands": "Remove learned buttons",
+          "replay_settings": "Signal replay settings",
+          "remote_manager": "Remote command manager",
+          "command_library": "Command library",
+          "export_import": "Backup / export / import",
+          "fan_settings": "Fan and startup settings",
+          "diagnostics": "Signal diagnostics",
+          "create_dashboard": "Create / refresh remote dashboard"
+        },
+        "description": "Choose an option from the alphabetical list. Changes apply after Save changes at the bottom."
+      },
+      "relearn": {
+        "title": "Re-learn a button",
+        "description": "Select any number of buttons. Test, retry or skip each one, then save changes.",
+        "data": {
+          "buttons": "Buttons to relearn (none selected)"
+        }
+      },
+      "add_fan_speeds": {
+        "title": "Add more fan speeds",
+        "description": "Choose the total number of slider steps, up to 8. You will only be asked to learn the new speed buttons; existing speeds remain unchanged. Choose Done in the main menu to save.",
+        "data": {
+          "speed_count": "Total fan speeds"
+        }
+      },
+      "fan_power_settings": {
+        "title": "Fan power button style",
+        "description": "Choose how the remote controls fan power. A single toggle button sends the same learned command for On and Off. Existing learned speeds are preserved. Choose Done in the main menu to save.",
+        "data": {
+          "fan_power_mode": "Fan power control type"
+        }
+      },
+      "add_entity": {
+        "title": "Add a new entity",
+        "description": "Choose the type and give it a name. You'll learn its buttons next.",
+        "data": {
+          "entity_type": "Entity type",
+          "name": "Entity name"
+        }
+      },
+      "add_entity_options": {
+        "title": "Options for {entity_type} \u2014 {name}",
+        "description": "Configure the specific options for this new entity.",
+        "data": {
+          "speed_count": "Number of speeds",
+          "fan_power_mode": "Fan power control type",
+          "has_on_button": "Remote has a separate On button",
+          "has_stop_button": "Remote has a Stop button",
+          "light_mode": "Light control type"
+        }
+      },
+      "learn_press": {
+        "title": "Release, then press again",
+        "description": "Locked onto the **{button}** signal. Let go of it now, then select **Submit** and press **{button}** once more."
+      },
+      "learn_result": {
+        "title": "Captured",
+        "description": "Got {pulses} pulses for **{button}**. Send it to test, keep it, or try again.",
+        "menu_options": {
+          "confirm": "Keep it",
+          "test": "Test (send it now)",
+          "retry": "Retry this button",
+          "skip": "Skip and keep any previous signal",
+          "choose_test_mode": "Choose and test a replay mode"
+        }
+      },
+      "learn_error": {
+        "title": "Nothing captured",
+        "description": "No code came through for **{button}** ({error}).",
+        "menu_options": {
+          "retry": "Try again",
+          "retry_direct": "Capture without the sweep",
+          "skip": "Skip and keep any previous signal"
+        }
+      },
+      "add_dc_features": {
+        "title": "Learn extra fan buttons",
+        "description": "Select only buttons present on your remote. Existing learned codes are kept. Choose Done in the main menu to save. To replace a learned code, use Re-learn a button.",
+        "data": {
+          "dc_extras": "Remote buttons"
+        }
+      },
+      "remove_commands": {
+        "title": "Remove learned buttons",
+        "description": "All currently learned optional buttons are selected. Untick only the buttons you want to delete. Off and fan speeds are protected.",
+        "data": {
+          "keep_commands": "Learned buttons to keep"
+        }
+      },
+      "confirm_remove_commands": {
+        "title": "Confirm button removal",
+        "description": "Delete these learned buttons and their controls? **{buttons}**",
+        "menu_options": {
+          "confirm_remove": "Confirm deletion",
+          "cancel_remove": "Cancel"
+        }
+      },
+      "replay_settings": {
+        "title": "Signal replay settings",
+        "description": "Use Captured signal for ordinary RF remotes. Mercator filtering is specific to supported Mercator remotes. Choose Done in the main menu to save.",
+        "data": {
+          "replay_mode": "Replay mode"
+        }
+      },
+      "remote_manager": {
+        "title": "Remote command manager",
+        "description": "Select a learned button to inspect, test, rename or reassign.",
+        "data": {
+          "command": "Learned button"
+        }
+      },
+      "manage_command": {
+        "title": "Manage button",
+        "description": "Testing transmits immediately. Confirm the physical response before keeping a mode. Changes are saved with Save changes in the main menu.",
+        "data": {
+          "mode": "Replay mode",
+          "action": "Action"
+        }
+      },
+      "choose_test_mode": {
+        "title": "Test replay mode",
+        "description": "Select a mode, then confirm whether the fan physically responds.",
+        "data": {
+          "mode": "Replay mode"
+        }
+      },
+      "test": {
+        "title": "Transmission failed",
+        "description": "Check the selected mode and transmitter. Submit to return without saving.",
+        "data": {}
+      },
+      "reassign": {
+        "title": "Reassign command",
+        "description": "Copy the signal to a different function. The source remains available.",
+        "data": {
+          "target": "Destination function",
+          "overwrite": "Replace an existing learned signal"
+        }
+      },
+      "rename_command": {
+        "title": "Rename button",
+        "description": "Changes the displayed button label while keeping its identity.",
+        "data": {
+          "name": "Button label"
+        }
+      },
+      "command_library": {
+        "title": "Command library",
+        "description": "Reuse a command from another remote with the same RF frequency.",
+        "data": {
+          "source_entry": "Source remote"
+        }
+      },
+      "library_copy": {
+        "title": "Copy library command",
+        "description": "Enter a function key such as speed_2, timer_2h, or a new custom button key.",
+        "data": {
+          "source_command": "Source button",
+          "target": "Destination function key",
+          "overwrite": "Replace existing signal"
+        }
+      },
+      "export_import": {
+        "title": "Backup / export / import",
+        "description": "Copy the export text to a file for safekeeping. Paste an export below to merge signals. Submit without import text to return. All changes remain pending until Save changes.",
+        "data": {
+          "export_json": "Command export (copy and save)",
+          "import_json": "Import command export",
+          "overwrite": "Allow replacing existing signals"
+        }
+      },
+      "fan_settings": {
+        "title": "Fan and startup settings",
+        "description": "Select learned speed levels and the assumed state after a restart. This does not send RF.",
+        "data": {
+          "speed_count": "Speed levels",
+          "startup_state": "Startup state"
+        }
+      },
+      "diagnostics": {
+        "title": "Signal diagnostics",
+        "description": "{summary}",
+        "data": {}
+      },
+      "finish": {
+        "title": "Save changes",
+        "description": "{summary}\nA private backup is created before saving. Submit to apply changes.",
+        "data": {}
+      },
+      "create_dashboard": {
+        "title": "Create / refresh remote dashboard",
+        "description": "Create controls for your saved RF devices in the sidebar. This takes effect immediately and keeps a backup of any previous generated dashboard. Learn or save new commands first.",
+        "data": {}
+      },
+      "dashboard_ready": {
+        "title": "Your remote dashboard is ready",
+        "description": "[Open RF Fan remotes](/rf-fan-remotes). You can also find it in the sidebar. Submit to return to Configure.",
+        "data": {}
+      }
+    },
+    "progress": {
+      "sweep": "Press and hold **{button}** on your remote and keep holding until the next screen appears.",
+      "capture": "Now press **{button}** once to capture it.",
+      "press": "Press **{button}** once on your remote to capture it."
+    },
+    "abort": {
+      "no_rf_device": "No RF-capable Broadlink device found. Make sure your Broadlink is online.",
+      "invalid_import": "The command source is unavailable or incompatible."
+    },
+    "error": {
+      "send_failed": "Transmission failed. No physical response has been confirmed. Try another mode or check the transmitter.",
+      "overwrite_required": "Tick the replacement checkbox to overwrite an existing signal.",
+      "invalid_import": "Invalid export, checksum, command format or RF frequency.",
+      "missing_speeds": "Learn all requested speeds first, using Add fan speeds.",
+      "dashboard_failed": "Could not create the dashboard. Check that the dashboard frontend is loaded and the rf-fan-remotes URL is not used by another dashboard."
+    }
+  }
+}

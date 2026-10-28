@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
+import voluptuous as vol
+from homeassistant.helpers import entity_platform
+from homeassistant.exceptions import HomeAssistantError
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +41,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the light entity."""
+    entity_platform.async_get_current_platform().async_register_entity_service(
+        "set_light_assumed_state", {vol.Required("state"): vol.In(["on", "off", "unknown"])}, "async_set_assumed_state")
     data = entry.data
     entities: list[LightEntity] = []
     commands = data[CONF_COMMANDS]
@@ -91,7 +96,8 @@ class RfLight(LightEntity, RestoreEntity):
             name=entry.data[CONF_NAME],
             manufacturer="RF Device (Broadlink Learning)",
         )
-        self._attr_is_on = False
+        self._attr_is_on = None
+        self._state_uncertain = True
 
     def _pk(self, cmd: str) -> str:
         return f"{self._key_prefix}_{cmd}" if self._key_prefix else cmd
@@ -100,13 +106,14 @@ class RfLight(LightEntity, RestoreEntity):
         """Restore the last assumed state across restarts."""
         await super().async_added_to_hass()
         if (last := await self.async_get_last_state()) is not None:
-            self._attr_is_on = last.state == "on"
+            self._attr_is_on = {"on": True, "off": False}.get(last.state)
 
     async def _send(self, cmd: str) -> None:
         key = self._pk(cmd)
         command = self._commands.get(key)
         if not command:
-            return
+            raise HomeAssistantError(f"Command {key} has not been learned")
+        self._state_uncertain = True
         await async_send_stored(
             self.hass,
             self._transmitter,
@@ -129,9 +136,27 @@ class RfLight(LightEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off (only sends the toggle if currently on)."""
         if self._light_mode == LIGHT_MODE_TOGGLE:
-            if self._attr_is_on:
+            if self._attr_is_on is not False:
                 await self._send(CMD_LIGHT)
         else:
             await self._send(CMD_OFF)
         self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+    @property
+    def extra_state_attributes(self):
+        return {"state_uncertain": self._state_uncertain, "control_mode": self._light_mode}
+
+    async def async_set_assumed_state(self, state):
+        self._attr_is_on = {"on": True, "off": False, "unknown": None}[state]
+        self._state_uncertain = state == "unknown"
+        self.async_write_ha_state()
+
+    async def async_toggle(self, **kwargs):
+        if self._light_mode != LIGHT_MODE_TOGGLE:
+            return await super().async_toggle(**kwargs)
+        await self._send(CMD_LIGHT)
+        if self._attr_is_on is not None:
+            self._attr_is_on = not self._attr_is_on
         self.async_write_ha_state()

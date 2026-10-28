@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from homeassistant.exceptions import HomeAssistantError
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -107,7 +108,7 @@ class RfCover(CoverEntity, RestoreEntity):
         key = self._k(cmd)
         command = self._commands.get(key)
         if not command:
-            return
+            raise HomeAssistantError(f"Command {key} has not been learned")
         await async_send_stored(
             self.hass,
             self._transmitter,

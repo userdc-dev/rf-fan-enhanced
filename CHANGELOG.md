@@ -1,3 +1,7 @@
+# 2.3.0 — 2026-10-28
+
+Alphabetical configuration, remote dashboard generation, per-command replay, batch relearning, command library, safe export/import, state correction, timers and diagnostics. Existing learned codes and entity identities are retained. See README for installation and usage.
+
 # Changelog
 
 ## 2.2.0

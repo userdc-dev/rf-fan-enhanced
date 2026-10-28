@@ -44,14 +44,20 @@ def decode_broadlink_packet(packet: bytes) -> tuple[list[int], int]:
     leading type byte does not affect pulse decoding, so this is robust to the
     small differences between learned and re-encoded packets.
     """
+    if len(packet) < 5 or packet[0] not in (0xB0, 0xB1, 0xB2, 0xB4, 0xD7):
+        raise ValueError("Invalid Broadlink RF packet header")
     repeat = packet[1]
     length = packet[2] | (packet[3] << 8)
+    if length > len(packet) - 4:
+        raise ValueError("Truncated Broadlink RF packet")
     pulses = packet[4 : 4 + length]
 
     timings: list[int] = []
     i = 0
     while i < len(pulses):
         if pulses[i] == 0x00:
+            if i + 2 >= len(pulses):
+                raise ValueError("Truncated Broadlink pulse")
             ticks = (pulses[i + 1] << 8) | pulses[i + 2]
             i += 3
         else:

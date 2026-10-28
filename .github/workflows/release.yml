@@ -1,0 +1,35 @@
+name: Publish release
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['custom_components/rf_fan/manifest.json']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+      - uses: hacs/action@main
+        with:
+          category: integration
+      - run: python -m unittest discover -s tests -v
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish version after validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python -c 'import json; print(json.load(open("custom_components/rf_fan/manifest.json"))["version"])')
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists"
+          else
+            gh release create "$version" --target "$GITHUB_SHA" --title "RF Fan Enhanced $version" --notes-file RELEASE_NOTES.md
+          fi
