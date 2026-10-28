@@ -10,9 +10,9 @@ class RfFanRemoteCard extends HTMLElement {
     this._hass = hass;
     if (!this._devices) this._refresh();
     this._subscribe();
-    this._render();
+    this._updateDynamic();
   }
-  getCardSize() { return Math.max(3, (this._devices?.length || 1) * 5); }
+  getCardSize() { return Math.max(3, (this._selectedFans()?.length || 1) * 5); }
   static getConfigElement() { return document.createElement("rf-fan-remote-card-editor"); }
   static getStubConfig() { return {}; }
   connectedCallback() {
@@ -39,6 +39,24 @@ class RfFanRemoteCard extends HTMLElement {
     return this._hass.callService(domain, service, data, {entity_id});
   }
   _command(fan, command) { return this._call("rf_fan", "send_command", fan.entity_id, {command}); }
+  _selectedFans() {
+    const wantedFan = this._config?.fan_id;
+    const wantedDevice = this._config?.device_id;
+    return (this._devices || []).flatMap(device => device.fans
+      .filter(fan => wantedFan && wantedFan !== "all" ? fan.fan_id === wantedFan : (!wantedDevice || wantedDevice === "all" || device.device_id === wantedDevice))
+      .map(fan => ({device, fan})));
+  }
+  _updateDynamic() {
+    if (!this.shadowRoot || !this._hass) return;
+    this.shadowRoot.querySelectorAll('[data-role="timer-remaining"]').forEach(node => {
+      const state = this._hass.states[node.dataset.entity];
+      node.firstChild.textContent = `Remaining: ${state?.attributes?.timer_remaining || "0:00:00"} `;
+    });
+    this.shadowRoot.querySelectorAll('[data-role="timer-start"]').forEach(node => {
+      const state = this._hass.states[node.dataset.entity];
+      node.textContent = state?.attributes?.timer_remaining_seconds ? "Restart" : "Start";
+    });
+  }
   _button(label, action, cls="") {
     const button = document.createElement("button");
     button.textContent = label;
@@ -76,7 +94,7 @@ class RfFanRemoteCard extends HTMLElement {
     const speeds = document.createElement("div"); speeds.className = "buttons speeds";
     speedCommands.slice(0, fan.speed_count).forEach((cmd, index) => speeds.append(this._button(String(index + 1), () => this._call("fan", "set_percentage", fan.entity_id, {percentage: Math.round((index + 1) * 100 / fan.speed_count)}))));
     const modes = fan.commands.filter(c => c.category === "mode" || c.category === "other");
-    const lighting = fan.commands.filter(c => c.category === "lighting" && !(fan.light_cycle && c.key === "light_colour"));
+    const lighting = fan.commands.filter(c => c.category === "lighting" && !(fan.light_cycle && ["light", "light_colour"].includes(c.key)));
     const physical = fan.commands.filter(c => c.category === "physical_timer");
     if (fan.light_entity_id && lighting.some(c => c.key === "light")) {
       lighting.find(c => c.key === "light").label = "Light toggle";
@@ -85,13 +103,14 @@ class RfFanRemoteCard extends HTMLElement {
     const cycleSection = fan.light_cycle ? document.createElement("div") : null;
     if (cycleSection) {
       cycleSection.className = "section cycle";
-      const cycleLabel = document.createElement("div"); cycleLabel.className = "label"; cycleLabel.textContent = "Light colours (start with light Off)";
+      const cycleLabel = document.createElement("div"); cycleLabel.className = "label"; cycleLabel.textContent = "Light toggle sequences (relative)";
       const cycleButtons = document.createElement("div"); cycleButtons.className = "buttons";
-      [["cool","Cool white"],["neutral","Neutral white"],["warm","Warm white"]].forEach(([mode,label]) => {
+      [["cool","Sequence 1"],["neutral","Sequence 2"],["warm","Sequence 3"]].forEach(([mode,label]) => {
         const clicks = fan.light_cycle[mode];
-        cycleButtons.append(this._button(`${label} · ${clicks}×`, () => this._call("rf_fan", "set_light_cycle", fan.entity_id, {mode})));
+        cycleButtons.append(this._button(`${label} · Send ${clicks}×`, () => this._call("rf_fan", "set_light_cycle", fan.entity_id, {mode})));
       });
-      cycleSection.append(cycleLabel, cycleButtons);
+      const note = document.createElement("div"); note.className = "diagnostics"; note.textContent = "Relative button presses; the RF light colour is not confirmed.";
+      cycleSection.append(cycleLabel, cycleButtons, note);
     }
     const timer = document.createElement("div"); timer.className = "timer section";
     const timerLabel = document.createElement("div"); timerLabel.className = "label"; timerLabel.textContent = "Custom timer";
@@ -105,8 +124,10 @@ class RfFanRemoteCard extends HTMLElement {
       const value = Number(input.value); if (!(value > 0)) return;
       this._call("rf_fan", "set_timer", fan.entity_id, {minutes: value * (unit.value === "hours" ? 60 : 1)});
     });
+    start.dataset.role = "timer-start"; start.dataset.entity = fan.entity_id;
     row.append(input, unit, start);
     const remaining = document.createElement("div"); remaining.className = "remaining";
+    remaining.dataset.role = "timer-remaining"; remaining.dataset.entity = fan.entity_id;
     remaining.append(document.createTextNode(`Remaining: ${state.attributes.timer_remaining || "0:00:00"} `));
     remaining.append(this._button("Cancel", () => this._call("rf_fan", "set_timer", fan.entity_id, {minutes: 0}), "link"));
     timer.append(timerLabel, row, remaining);
@@ -135,10 +156,9 @@ class RfFanRemoteCard extends HTMLElement {
     </style>`;
     const card = document.createElement("ha-card");
     if (this._error) { card.innerHTML = `<div class="unavailable">${this._error}</div>`; this.shadowRoot.append(card); return; }
-    const wanted = this._config?.device_id;
-    const devices = (this._devices || []).filter(d => !wanted || wanted === "all" || d.device_id === wanted);
-    if (!devices.length) card.innerHTML = `<div class="unavailable">This RF Fan device is unavailable or has been deleted.</div>`;
-    else devices.forEach(device => device.fans.forEach(fan => card.append(this._fanCard(device, fan))));
+    const fans = this._selectedFans();
+    if (!fans.length) card.innerHTML = `<div class="unavailable">This RF Fan device is unavailable or has been deleted.</div>`;
+    else fans.forEach(({device, fan}) => card.append(this._fanCard(device, fan)));
     this.shadowRoot.append(card);
   }
 }
@@ -152,9 +172,21 @@ class RfFanRemoteCardEditor extends HTMLElement {
     this.innerHTML = `<div style="padding:12px"><label>RF Fan device<br><select style="width:100%;margin-top:6px;padding:8px"></select></label></div>`;
     const select = this.querySelector("select");
     select.add(new Option("All RF Fan devices", "all"));
-    (this._devices || []).forEach(device => select.add(new Option(device.name, device.device_id)));
-    select.value = this._config?.device_id || "all";
-    select.onchange = () => this.dispatchEvent(new CustomEvent("config-changed", {detail:{config:{...this._config, device_id:select.value}}, bubbles:true, composed:true}));
+    (this._devices || []).forEach(device => device.fans.forEach(fan => {
+      const label = device.fans.length > 1 ? `${device.name} — ${fan.name}` : device.name;
+      select.add(new Option(label, fan.fan_id));
+    }));
+    const legacyDevice = this._config?.device_id;
+    const legacyFan = legacyDevice && legacyDevice !== "all"
+      ? (this._devices || []).find(device => device.device_id === legacyDevice)?.fans?.[0]?.fan_id
+      : null;
+    select.value = this._config?.fan_id || legacyFan || "all";
+    select.onchange = () => {
+      const config = {...this._config};
+      delete config.device_id;
+      config.fan_id = select.value;
+      this.dispatchEvent(new CustomEvent("config-changed", {detail:{config}, bubbles:true, composed:true}));
+    };
   }
 }
 

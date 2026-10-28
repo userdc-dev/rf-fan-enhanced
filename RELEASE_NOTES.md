@@ -1,9 +1,10 @@
-RF Fan Enhanced 2.5.0 adds an automatically discovered, reusable visual remote card that works on desktop and in the Android Companion app. The compact layout separates each fan clearly, shows physical RF timer buttons directly and removes the unnecessary Advanced section.
+RF Fan Enhanced 2.5.1 is a stability update for 2.5.0.
 
-Safe OFF sends the existing Speed 1 command, waits about one second, then sends the existing power/off command. Custom software timers now provide a live backend countdown and expire through Safe OFF when enabled. Toggle-only lights can use configurable Cool/Neutral/Warm press-count presets, defaulting to 1×/3×/5× from a physically off starting point.
+- Serializes state-changing operations for every fan belonging to the same learned remote, so speed, power, timer and remote-card actions cannot interleave with Safe OFF.
+- Makes software timer cancellation and reload handling race-safe. A timer missed while Home Assistant was offline is reported as missed and does not cause a surprise shutdown on startup.
+- Keeps the custom timer input intact while Home Assistant state updates refresh only the live countdown and Start/Restart label.
+- Enforces command ownership between primary and sub-fans, updates known optimistic states after remote-card commands, and lets the card editor select an individual sub-fan.
+- Removes duplicate light controls and presents multi-click light actions as relative sequences rather than guaranteed colour presets.
+- Skips identical generated-dashboard rewrites, protects externally changed dashboard files, and retains at most five generated-dashboard snapshots.
 
-Existing learned signals, replay modes and entity identities are preserved. No RF command is changed or relearned by this upgrade.
-
-Use the two installation shortcuts in README: Open in HACS, then Add RF Fan Enhanced after downloading and restarting Home Assistant.
-
-Software validation covered Home Assistant 2026.9.2 and a 400-pixel mobile layout. RF remains one-way; Safe OFF and light colours are assumed until independently observed. Google Home/Alexa behavior depends on your bridge. TCL IR controls are outside this integration.
+Existing RF packets, replay modes, entity unique IDs, learning, reassignment, Broadlink resources and user dashboards are unchanged. RF remains one-way, so state is optimistic unless the installation has separate feedback. This release was validated without transmitting to physical fans.

@@ -22,7 +22,7 @@ from .const import (
 from .extra_buttons import EXTRA_BUTTONS
 
 CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.0"
+CARD_URL = f"{CARD_PATH}?v=2.5.1"
 
 
 def _category(key: str) -> str:
@@ -48,7 +48,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     for entry in hass.config_entries.async_entries(DOMAIN):
         data = entry.data
         commands = data.get(CONF_COMMANDS, {})
-        device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+        device = device_registry.async_get_device_by_identifier((DOMAIN, entry.entry_id))
         registry_rows = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
         by_unique = {(row.domain, row.unique_id): row.entity_id for row in registry_rows if not row.disabled_by}
         sub_prefixes = {
@@ -86,6 +86,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
             light_unique = f"{entry.entry_id}_light_{prefix}" if prefix else f"{entry.entry_id}_light"
             fans.append({
                 **item,
+                "fan_id": f"{entry.entry_id}:{prefix or 'primary'}",
                 "entity_id": fan_entity,
                 "light_entity_id": by_unique.get(("light", light_unique)),
                 "safe_off_enabled": bool(data.get(CONF_SAFE_OFF, any(c["key"] == "speed_1" for c in available) and any(c["key"] == "off" for c in available))),
