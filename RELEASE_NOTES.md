@@ -1,4 +1,11 @@
-RF Fan Enhanced 2.5.3 improves native Home Assistant and Matter voice controls.
+RF Fan Enhanced 2.5.4 improves practical Google Home voice control.
+
+- Gives the existing Reverse, Wind Mode and Cycle Light Colour actions short,
+  voice-friendly names when RiDDiX exposes them through Matter.
+- Preserves entity IDs, learned RF packets and replay modes; only display names
+  used by voice assistants change.
+
+It also includes the 2.5.3 native Home Assistant and Matter improvements:
 
 - Exposes learned Natural Breeze commands as the native `Normal` / `Natural` fan preset modes used by RiDDiX Matter Hub's `naturalWind` mapping.
 - Makes initial direction and oscillation requests useful while keeping their one-way RF state explicitly optimistic.
