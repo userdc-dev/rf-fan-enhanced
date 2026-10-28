@@ -1,4 +1,9 @@
-RF Fan Enhanced 2.5.1 is a stability update for 2.5.0.
+RF Fan Enhanced 2.5.2 is a hotfix for the remote-card discovery failure in 2.5.1.
+
+- Restores the complete 2.5-style visual remote dashboard on Home Assistant 2026.9.
+- Shows a useful discovery error instead of `[object Object]` if the backend is unavailable.
+
+It also includes all 2.5.1 stability improvements:
 
 - Serializes state-changing operations for every fan belonging to the same learned remote, so speed, power, timer and remote-card actions cannot interleave with Safe OFF.
 - Makes software timer cancellation and reload handling race-safe. A timer missed while Home Assistant was offline is reported as missed and does not cause a surprise shutdown on startup.

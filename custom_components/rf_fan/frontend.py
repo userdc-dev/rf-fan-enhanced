@@ -22,7 +22,7 @@ from .const import (
 from .extra_buttons import EXTRA_BUTTONS
 
 CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.1"
+CARD_URL = f"{CARD_PATH}?v=2.5.2"
 
 
 def _category(key: str) -> str:
@@ -48,7 +48,9 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     for entry in hass.config_entries.async_entries(DOMAIN):
         data = entry.data
         commands = data.get(CONF_COMMANDS, {})
-        device = device_registry.async_get_device_by_identifier((DOMAIN, entry.entry_id))
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.entry_id), entry.entry_id
+        )
         registry_rows = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
         by_unique = {(row.domain, row.unique_id): row.entity_id for row in registry_rows if not row.disabled_by}
         sub_prefixes = {

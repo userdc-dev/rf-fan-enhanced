@@ -31,7 +31,9 @@ class RfFanRemoteCard extends HTMLElement {
     if (!this._hass || this._loading) return;
     this._loading = true;
     try { this._devices = await this._hass.callWS({type: "rf_fan/devices"}); }
-    catch (err) { this._error = String(err); }
+    catch (err) {
+      this._error = err?.message || err?.code || "Unable to load RF Fan remotes. Check Home Assistant logs.";
+    }
     this._loading = false;
     this._render();
   }
