@@ -2,6 +2,7 @@
   "domain": "rf_fan",
   "name": "RF Fan Enhanced",
   "after_dependencies": ["broadlink"],
+  "categories": ["climate.fans_ventilation", "buttons_remotes"],
   "codeowners": ["@userdc-dev"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],
