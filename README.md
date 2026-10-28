@@ -10,6 +10,9 @@ for userdc-dev's Home Assistant fan setup:
 - English setup and configuration screens
 - Up to eight learned fan speeds with slider control
 - Optional timer, direction, swing, breeze and light-related buttons
+- Fan lights default to one learned On/Off toggle command, matching most fan
+  remotes; separate On and Off commands are also supported when the remote has
+  two distinct light buttons
 - Safe addition and re-learning of individual controls
 - A preselected learned-button checklist with confirmed, clean removal
 - Per-device raw or filtered RF replay so non-Mercator fans remain reliable
