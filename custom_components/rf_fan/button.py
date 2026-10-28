@@ -74,7 +74,13 @@ class RfButton(ButtonEntity):
         self._frequency = entry.data[CONF_FREQUENCY]
         self._direct = entry.data.get(CONF_DIRECT, False)
         self._replay_mode = entry.data.get("replay_mode", "legacy")
-        self._attr_name = self._command.get("label", name)
+        # This relative RF action is intentionally a momentary button.  The
+        # short name works well when RiDDiX exposes it as an On/Off plug.
+        self._attr_name = (
+            "Cycle Fan Light Colour"
+            if key == "light_colour"
+            else self._command.get("label", name)
+        )
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

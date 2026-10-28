@@ -22,7 +22,7 @@ from .const import (
 from .extra_buttons import EXTRA_BUTTONS
 
 CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.2"
+CARD_URL = f"{CARD_PATH}?v=2.5.3"
 
 
 def _category(key: str) -> str:

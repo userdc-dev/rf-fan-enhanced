@@ -190,6 +190,11 @@ class RfFan(FanEntity, RestoreEntity):
         if self._pk("swing") in self._commands:
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         self._attr_oscillating = None
+        self._attr_preset_mode = None
+        if self._pk("natural_breeze") in self._commands:
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+            # RiDDiX maps the exact "Natural" preset to Matter naturalWind.
+            self._attr_preset_modes = ["Normal", "Natural"]
 
     @property
     def is_on(self):
@@ -210,6 +215,7 @@ class RfFan(FanEntity, RestoreEntity):
                 self._attr_percentage = pct
             self._attr_current_direction = last.attributes.get("direction")
             self._attr_oscillating = last.attributes.get("oscillating")
+            self._attr_preset_mode = last.attributes.get("preset_mode")
             deadline = last.attributes.get("timer_end")
             if deadline:
                 try:
@@ -307,6 +313,8 @@ class RfFan(FanEntity, RestoreEntity):
         """Turn the fan on, optionally at a given speed."""
         async with self._operation_lock:
             await self._async_turn_on_locked(percentage)
+            if preset_mode is not None:
+                await self._async_set_preset_mode_locked(preset_mode)
 
     async def _async_turn_off_locked(self) -> None:
         self._cancel_timer()
@@ -401,6 +409,10 @@ class RfFan(FanEntity, RestoreEntity):
             self._attr_current_direction = "reverse" if self._attr_current_direction == "forward" else "forward"
         elif bare == "swing" and self._attr_oscillating is not None:
             self._attr_oscillating = not self._attr_oscillating
+        elif bare == "natural_breeze":
+            self._attr_preset_mode = (
+                "Normal" if self._attr_preset_mode == "Natural" else "Natural"
+            )
         elif bare == "light":
             await self._async_update_light_state(1)
         self.async_write_ha_state()
@@ -461,8 +473,15 @@ class RfFan(FanEntity, RestoreEntity):
             raise HomeAssistantError("Invalid fan direction")
         async with self._operation_lock:
             if self._attr_current_direction is None:
-                raise HomeAssistantError("Confirm the current direction with rf_fan.set_assumed_state first")
-            if direction != self._attr_current_direction:
+                # With one-way RF, Forward is only an assumption. Sending the
+                # toggle for an explicit Reverse request is the least
+                # surprising voice-control behaviour; no feedback is claimed.
+                if direction == "reverse":
+                    await self._send(self._pk("direction_toggle"))
+                self._attr_current_direction = direction
+                self._state_uncertain = True
+                self.async_write_ha_state()
+            elif direction != self._attr_current_direction:
                 await self._send(self._pk("direction_toggle"))
                 self._attr_current_direction = direction
                 self._state_uncertain = True
@@ -470,11 +489,35 @@ class RfFan(FanEntity, RestoreEntity):
 
     async def async_oscillate(self, oscillating):
         async with self._operation_lock:
-            if self._attr_oscillating is None or oscillating != self._attr_oscillating:
+            if self._attr_oscillating is None:
+                if oscillating:
+                    await self._send(self._pk("swing"))
+                self._attr_oscillating = oscillating
+                self._state_uncertain = True
+                self.async_write_ha_state()
+            elif oscillating != self._attr_oscillating:
                 await self._send(self._pk("swing"))
                 self._attr_oscillating = oscillating
                 self._state_uncertain = True
                 self.async_write_ha_state()
+
+    async def _async_set_preset_mode_locked(self, preset_mode: str) -> None:
+        """Set the optimistic native Natural Wind preset."""
+        if preset_mode not in (self._attr_preset_modes or []):
+            raise HomeAssistantError(f"Unsupported preset mode: {preset_mode}")
+        if self._attr_preset_mode is None:
+            if preset_mode == "Natural":
+                await self._send(self._pk("natural_breeze"))
+        elif preset_mode != self._attr_preset_mode:
+            await self._send(self._pk("natural_breeze"))
+        self._attr_preset_mode = preset_mode
+        self._state_uncertain = True
+        self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Expose Natural Wind through Home Assistant's native fan model."""
+        async with self._operation_lock:
+            await self._async_set_preset_mode_locked(preset_mode)
 
     def _schedule_timer(self, deadline):
         self._cancel_timer()

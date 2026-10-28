@@ -1,4 +1,11 @@
-RF Fan Enhanced 2.5.2 is a hotfix for the remote-card discovery failure in 2.5.1.
+RF Fan Enhanced 2.5.3 improves native Home Assistant and Matter voice controls.
+
+- Exposes learned Natural Breeze commands as the native `Normal` / `Natural` fan preset modes used by RiDDiX Matter Hub's `naturalWind` mapping.
+- Makes initial direction and oscillation requests useful while keeping their one-way RF state explicitly optimistic.
+- Restores direction, oscillation and Natural Wind assumptions across Home Assistant restarts.
+- Gives the relative light-colour-cycle button a short voice-friendly name while preserving its entity ID and learned RF command.
+
+It also includes the 2.5.2 remote-card hotfix:
 
 - Restores the complete 2.5-style visual remote dashboard on Home Assistant 2026.9.
 - Shows a useful discovery error instead of `[object Object]` if the backend is unavailable.
