@@ -1,0 +1,165 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an RF device",
+        "description": "Name the device, pick its primary entity type, and choose which RF transmitter to use.",
+        "data": {
+          "name": "Device name",
+          "entity_type": "Primary entity type",
+          "transmitter": "RF transmitter",
+          "frequency": "Frequency"
+        }
+      },
+      "entity_options": {
+        "title": "Options for {entity_type}",
+        "description": "Configure the specific options for this entity. You'll learn each button next.",
+        "data": {
+          "speed_count": "Number of speeds",
+          "has_on_button": "Remote has a separate On button",
+          "has_stop_button": "Remote has a Stop button",
+          "light_mode": "Light control type",
+          "direct_capture": "Skip the frequency sweep (try this if the remote won't detect)"
+        }
+      },
+      "learn_press": {
+        "title": "Release, then press again",
+        "description": "Locked onto the **{button}** button's signal. Let go of it now. Then select **Submit** and press **{button}** once more to capture the code."
+      },
+      "learn_result": {
+        "title": "Captured",
+        "description": "Got {pulses} pulses for the **{button}** button. Send it to test, keep it, or try again.",
+        "menu_options": {
+          "confirm": "Keep and continue",
+          "test": "Test (send it now)",
+          "retry": "Retry this button"
+        }
+      },
+      "learn_error": {
+        "title": "Nothing captured",
+        "description": "No code came through for the **{button}** button ({error}). Try again, or capture without the frequency sweep \u2014 that works for remotes the sweep can't lock onto (just one press at the set frequency).",
+        "menu_options": {
+          "retry": "Try again",
+          "retry_direct": "Capture without the sweep"
+        }
+      }
+    },
+    "progress": {
+      "sweep": "Press and hold the **{button}** button on your remote, and keep holding until the next screen appears.",
+      "capture": "Now press the **{button}** button once to capture it.",
+      "press": "Press the **{button}** button on your remote once now to capture it."
+    },
+    "abort": {
+      "no_rf_device": "No RF-capable Broadlink device found. Set up your RM4 Pro (or similar) in the Broadlink integration first."
+    },
+    "error": {
+      "learn_failed": "Learning failed. Please try again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure RF device",
+        "menu_options": {
+          "relearn": "Re-learn a button",
+          "add_entity": "Add a new entity",
+          "finish": "Done",
+          "add_fan_speeds": "Add more fan speeds",
+          "add_dc_features": "Learn extra fan buttons",
+          "remove_commands": "Remove learned buttons",
+          "replay_settings": "Signal replay settings"
+        }
+      },
+      "relearn": {
+        "title": "Re-learn a button",
+        "description": "Pick the button to re-learn. Tip: learn each speed by the speed it actually runs at on the fan, not the label on the remote.",
+        "data": {
+          "button": "Button"
+        }
+      },
+      "add_fan_speeds": {
+        "title": "Add more fan speeds",
+        "description": "Choose the total number of slider steps, up to 8. You will only be asked to learn the new speed buttons; existing speeds remain unchanged. Choose Done in the main menu to save.",
+        "data": {
+          "speed_count": "Total fan speeds"
+        }
+      },
+      "add_entity": {
+        "title": "Add a new entity",
+        "description": "Choose the type and give it a name. You'll learn its buttons next.",
+        "data": {
+          "entity_type": "Entity type",
+          "name": "Entity name"
+        }
+      },
+      "add_entity_options": {
+        "title": "Options for {entity_type} \u2014 {name}",
+        "description": "Configure the specific options for this new entity.",
+        "data": {
+          "speed_count": "Number of speeds",
+          "has_on_button": "Remote has a separate On button",
+          "has_stop_button": "Remote has a Stop button",
+          "light_mode": "Light control type"
+        }
+      },
+      "learn_press": {
+        "title": "Release, then press again",
+        "description": "Locked onto the **{button}** signal. Let go of it now, then select **Submit** and press **{button}** once more."
+      },
+      "learn_result": {
+        "title": "Captured",
+        "description": "Got {pulses} pulses for **{button}**. Send it to test, keep it, or try again.",
+        "menu_options": {
+          "confirm": "Keep it",
+          "test": "Test (send it now)",
+          "retry": "Retry this button"
+        }
+      },
+      "learn_error": {
+        "title": "Nothing captured",
+        "description": "No code came through for **{button}** ({error}).",
+        "menu_options": {
+          "retry": "Try again",
+          "retry_direct": "Capture without the sweep"
+        }
+      },
+      "add_dc_features": {
+        "title": "Learn extra fan buttons",
+        "description": "Select only buttons present on your remote. Existing learned codes are kept. Choose Done in the main menu to save. To replace a learned code, use Re-learn a button.",
+        "data": {
+          "dc_extras": "Remote buttons"
+        }
+      },
+      "remove_commands": {
+        "title": "Remove learned buttons",
+        "description": "All currently learned optional buttons are selected. Untick only the buttons you want to delete. Off and fan speeds are protected.",
+        "data": {
+          "keep_commands": "Learned buttons to keep"
+        }
+      },
+      "confirm_remove_commands": {
+        "title": "Confirm button removal",
+        "description": "Delete these learned buttons and their controls? **{buttons}**",
+        "menu_options": {
+          "confirm_remove": "Confirm deletion",
+          "cancel_remove": "Cancel"
+        }
+      },
+      "replay_settings": {
+        "title": "Signal replay settings",
+        "description": "Use Captured signal for ordinary RF remotes. Mercator filtering is specific to supported Mercator remotes. Choose Done in the main menu to save.",
+        "data": {
+          "replay_mode": "Replay mode"
+        }
+      }
+    },
+    "progress": {
+      "sweep": "Press and hold **{button}** on your remote and keep holding until the next screen appears.",
+      "capture": "Now press **{button}** once to capture it.",
+      "press": "Press **{button}** once on your remote to capture it."
+    },
+    "abort": {
+      "no_rf_device": "No RF-capable Broadlink device found. Make sure your Broadlink is online."
+    }
+  }
+}
