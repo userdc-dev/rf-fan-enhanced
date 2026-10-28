@@ -17,6 +17,13 @@
         "data": {
           "speed_count": "Number of speeds",
           "fan_power_mode": "Fan power control type",
+          "fan_light_mode": "Does your fan have a light? How is it switched?",
+          "fan_light_extras": "Optional light buttons (colour cycle, colour presets, brightness)",
+          "fan_timer_buttons": "Timer buttons to learn",
+          "has_direction": "Fan has a direction/reverse button",
+          "has_oscillation": "Fan has a physical oscillation button",
+          "has_swing_air": "Fan has a swing air/breeze toggle",
+          "has_natural_breeze": "Fan has a natural breeze/wind mode",
           "has_on_button": "Remote has a separate On button",
           "has_stop_button": "Remote has a Stop button",
           "light_mode": "Light control type",

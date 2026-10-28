@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.0
+
+- Expanded first-time fan setup to include light style, optional colour and
+  brightness buttons, timer buttons, direction, physical oscillation,
+  swing/breeze and natural-wind controls.
+- All selected controls are learned during the original guided setup; opening
+  Configure afterward is no longer required to complete a typical fan remote.
+
 ## 2.1.0
 
 - Added selectable fan power styles: one On/Off toggle, Off-only, or separate

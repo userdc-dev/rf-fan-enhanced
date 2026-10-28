@@ -15,6 +15,9 @@ for userdc-dev's Home Assistant fan setup:
   two distinct light buttons
 - Fan power supports one On/Off toggle button, an Off-only button with speeds
   used to turn on, or separate On and Off buttons
+- The initial fan wizard can learn light controls, colour and brightness
+  buttons, timers, direction, oscillation, swing air and natural breeze in one
+  guided setup; the Configure menu remains available for later changes
 - Safe addition and re-learning of individual controls
 - A preselected learned-button checklist with confirmed, clean removal
 - Per-device raw or filtered RF replay so non-Mercator fans remain reliable

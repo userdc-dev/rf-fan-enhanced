@@ -94,6 +94,21 @@ FAN_POWER_MODE_OPTIONS = [
     selector.SelectOptionDict(value=FAN_POWER_MODE_ON_OFF, label="Two buttons (separate On and Off)"),
 ]
 
+FAN_LIGHT_MODE_NONE = "none"
+FAN_LIGHT_MODE_OPTIONS = [
+    selector.SelectOptionDict(value=FAN_LIGHT_MODE_NONE, label="No fan light"),
+    selector.SelectOptionDict(value=LIGHT_MODE_TOGGLE, label="One light button (On / Off toggle)"),
+    selector.SelectOptionDict(value=LIGHT_MODE_ON_OFF, label="Two light buttons (separate On and Off)"),
+]
+FAN_LIGHT_EXTRA_KEYS = [
+    "light_colour", "light_warm", "light_neutral", "light_cool",
+    "brightness_up", "brightness_down",
+]
+FAN_TIMER_KEYS = [
+    "timer_30m", "timer_1h", "timer_2h", "timer_4h", "timer_6h",
+    "timer_8h", "timer_cycle",
+]
+
 
 async def _delayed_capture(device: Any) -> dict[str, Any]:
     """Brief settle, then capture the packet (sweep flow, phase 2)."""
@@ -192,6 +207,10 @@ class _LearnFlowMixin:
             return "On"
         if bare == CMD_LIGHT or key == CMD_LIGHT:
             return "Light toggle"
+        if key == "fan_light_on":
+            return "Light On"
+        if key == "fan_light_off":
+            return "Light Off"
         if bare == CMD_OPEN or key == CMD_OPEN:
             return "Open"
         if bare == CMD_CLOSE or key == CMD_CLOSE:
@@ -387,6 +406,7 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
         self._fan_power_mode: str = FAN_POWER_MODE_OFF_ONLY
         self._has_stop: bool = False
         self._light_mode: str = LIGHT_MODE_TOGGLE
+        self._initial_sub_entities: list[dict[str, Any]] = []
 
     @staticmethod
     @callback
@@ -443,11 +463,35 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
                 self._speed_count = int(user_input[CONF_SPEED_COUNT])
                 self._fan_power_mode = user_input.get(CONF_FAN_POWER_MODE, FAN_POWER_MODE_TOGGLE)
                 self._has_on = self._fan_power_mode == FAN_POWER_MODE_ON_OFF
+                fan_light_mode = user_input.get("fan_light_mode", FAN_LIGHT_MODE_NONE)
+                light_extras = list(user_input.get("fan_light_extras", []))
+                timer_buttons = list(user_input.get("fan_timer_buttons", []))
+                feature_buttons = [
+                    key
+                    for key, selected in (
+                        ("direction_toggle", user_input.get("has_direction", False)),
+                        ("swing", user_input.get("has_oscillation", False)),
+                        ("swing_air", user_input.get("has_swing_air", False)),
+                        ("natural_breeze", user_input.get("has_natural_breeze", False)),
+                    )
+                    if selected
+                ]
+                selected_extras = list(dict.fromkeys(light_extras + timer_buttons + feature_buttons))
                 self._data.update({
                     CONF_SPEED_COUNT: self._speed_count,
                     CONF_HAS_ON: self._has_on,
                     CONF_FAN_POWER_MODE: self._fan_power_mode,
+                    "dc_extras": selected_extras,
+                    "has_light": fan_light_mode == LIGHT_MODE_TOGGLE,
                 })
+                self._initial_sub_entities = []
+                if fan_light_mode == LIGHT_MODE_ON_OFF:
+                    self._initial_sub_entities.append({
+                        "entity_type": ENTITY_TYPE_LIGHT,
+                        "name": "Light",
+                        "key_prefix": "fan_light",
+                        "light_mode": LIGHT_MODE_ON_OFF,
+                    })
             elif entity_type == ENTITY_TYPE_COVER:
                 self._has_stop = user_input.get(CONF_HAS_STOP, False)
                 self._data[CONF_HAS_STOP] = self._has_stop
@@ -471,6 +515,12 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
                 light_mode=self._light_mode,
                 customs=self._customs,
             )
+            if entity_type == ENTITY_TYPE_FAN:
+                if fan_light_mode == LIGHT_MODE_TOGGLE:
+                    self._queue.append(CMD_LIGHT)
+                elif fan_light_mode == LIGHT_MODE_ON_OFF:
+                    self._queue.extend(["fan_light_on", "fan_light_off"])
+                self._queue.extend(selected_extras)
             return await self.async_step_next()
 
         # Build the schema depending on entity type
@@ -482,6 +532,25 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
             fields[vol.Required(CONF_FAN_POWER_MODE, default=FAN_POWER_MODE_TOGGLE)] = selector.SelectSelector(
                 selector.SelectSelectorConfig(options=FAN_POWER_MODE_OPTIONS)
             )
+            fields[vol.Required("fan_light_mode", default=FAN_LIGHT_MODE_NONE)] = selector.SelectSelector(
+                selector.SelectSelectorConfig(options=FAN_LIGHT_MODE_OPTIONS)
+            )
+            fields[vol.Optional("fan_light_extras", default=[])] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[selector.SelectOptionDict(value=key, label=EXTRA_BUTTONS[key]) for key in FAN_LIGHT_EXTRA_KEYS],
+                    multiple=True,
+                )
+            )
+            fields[vol.Optional("fan_timer_buttons", default=[])] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[selector.SelectOptionDict(value=key, label=EXTRA_BUTTONS[key]) for key in FAN_TIMER_KEYS],
+                    multiple=True,
+                )
+            )
+            fields[vol.Required("has_direction", default=False)] = selector.BooleanSelector()
+            fields[vol.Required("has_oscillation", default=False)] = selector.BooleanSelector()
+            fields[vol.Required("has_swing_air", default=False)] = selector.BooleanSelector()
+            fields[vol.Required("has_natural_breeze", default=False)] = selector.BooleanSelector()
         elif entity_type == ENTITY_TYPE_COVER:
             fields[vol.Required(CONF_HAS_STOP, default=True)] = selector.BooleanSelector()
         elif entity_type == ENTITY_TYPE_LIGHT:
@@ -505,7 +574,7 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
                     **self._data,
                     CONF_COMMANDS: self._commands,
                     CONF_CUSTOMS: self._customs,
-                    CONF_SUB_ENTITIES: [],
+                    CONF_SUB_ENTITIES: self._initial_sub_entities,
                 },
             )
         self._current_key = self._queue.pop(0)
