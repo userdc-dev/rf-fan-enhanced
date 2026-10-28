@@ -10,7 +10,9 @@ Download in HACS, restart Home Assistant, then add your RF remote:
 
 [![Add RF Fan Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
 
-**Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured RF-capable Broadlink RM Pro / RM4 Pro. Your transmitter must appear as a `radio_frequency` entity. RF commands need to be learned from your own remote.
+**Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured RF-capable Broadlink RM Pro / RM4 Pro. You may try using ESP home or another RF remote however my testing was done using Broadlink RM 4 pro. Your transmitter must appear as a `radio_frequency` entity. RF commands need to be learned from your own remote. Try to keep your RF transmitter close to furthest away devices (by trying to place around center of place or any other ways).
+
+My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan with LED Light. (both came with remotes and I used this project to replace them). Contact- divy@dcgogna.com.
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
@@ -84,4 +86,4 @@ Repository workflows run HACS validation, Home Assistant hassfest and portable c
 
 ## Credits and licence
 
-Maintained by [@userdc-dev](https://github.com/userdc-dev), based on [clevrdavid/rf_fan](https://github.com/clevrdavid/rf_fan). MIT licence; original attribution is retained in [LICENSE](LICENSE).
+Maintained by [@userdc-dev](https://github.com/userdc-dev), originally inspired and forked out of base project by [clevrdavid/rf_fan](https://github.com/clevrdavid/rf_fan). MIT licence; original attribution is retained in [LICENSE](LICENSE).
