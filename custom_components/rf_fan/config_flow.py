@@ -76,12 +76,40 @@ from .extra_buttons import EXTRA_BUTTONS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Frequencies are transmitter-specific. Never advertise universal 868/915 MHz support.
+# This list is a conservative fallback for Broadlink hardware whose capabilities
+# are not exposed through the radio_frequency entity.
 FREQ_OPTIONS = [
-    selector.SelectOptionDict(value=str(DEFAULT_FREQUENCY), label="433.92 MHz"),
-    selector.SelectOptionDict(value="315000000", label="315 MHz"),
-    selector.SelectOptionDict(value="868000000", label="868 MHz"),
-    selector.SelectOptionDict(value="915000000", label="915 MHz"),
+    selector.SelectOptionDict(value=str(DEFAULT_FREQUENCY), label="433.92 MHz (433 MHz band)"),
 ]
+
+
+def _frequency_options(hass, transmitter: str):
+    """Use explicit frequency capabilities when the transmitter exposes them.
+
+    radio_frequency integrations do not have a universal capability schema.
+    Only accept a declared list of individual frequencies; never infer support
+    from the entity name, manufacturer or generic RF device type.
+    """
+    state = hass.states.get(transmitter)
+    if state is None:
+        return FREQ_OPTIONS
+    declared = state.attributes.get("supported_frequencies")
+    if not isinstance(declared, (list, tuple)):
+        return FREQ_OPTIONS
+    options = []
+    for item in declared:
+        try:
+            value = float(item)
+        except (TypeError, ValueError):
+            continue
+        # Support Hz and MHz representations without allowing arbitrary bands.
+        hz = round(value * 1_000_000) if value < 1000 else round(value)
+        if 100_000_000 <= hz <= 1_000_000_000:
+            options.append(selector.SelectOptionDict(
+                value=str(hz), label=f"{hz / 1_000_000:g} MHz"
+            ))
+    return options or FREQ_OPTIONS
 
 ENTITY_TYPE_OPTIONS = [
     selector.SelectOptionDict(value=ENTITY_TYPE_FAN,    label="Ceiling Fan"),
@@ -454,21 +482,20 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_rf_device")
 
         if user_input is not None:
-            self._device = next(iter(devices.values()))
             self._entity_type = user_input[CONF_ENTITY_TYPE]
             self._transmitter = user_input[CONF_TRANSMITTER]
             reg = er.async_get(self.hass).async_get(self._transmitter)
             self._device = getattr(self.hass.data.get("broadlink"), "devices", {}).get(reg.config_entry_id) if reg else None
-            if self._device is None:
+            if self._device is None or self._device not in devices.values():
+                # Transmission-only RF devices need a different learning backend.
+                # Do not offer a setup that will fail at the first learn step.
                 return self.async_abort(reason="no_rf_device")
-            self._frequency = int(user_input[CONF_FREQUENCY])
             self._data = {
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_ENTITY_TYPE: self._entity_type,
                 CONF_TRANSMITTER: self._transmitter,
-                CONF_FREQUENCY: self._frequency,
             }
-            return await self.async_step_entity_options()
+            return await self.async_step_frequency()
 
         schema = vol.Schema({
             vol.Required(CONF_NAME): selector.TextSelector(),
@@ -478,11 +505,31 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_TRANSMITTER): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="radio_frequency")
             ),
-            vol.Required(CONF_FREQUENCY, default=str(DEFAULT_FREQUENCY)): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=FREQ_OPTIONS)
-            ),
         })
         return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def async_step_frequency(self, user_input=None) -> ConfigFlowResult:
+        """Show frequencies only after the RF transmitter is known."""
+        options = _frequency_options(self.hass, self._transmitter)
+        allowed = {option["value"] for option in options}
+        if user_input is not None:
+            chosen = str(user_input[CONF_FREQUENCY])
+            if chosen in allowed:
+                self._frequency = int(chosen)
+                self._data[CONF_FREQUENCY] = self._frequency
+                return await self.async_step_entity_options()
+        default = str(DEFAULT_FREQUENCY)
+        if default not in allowed:
+            default = options[0]["value"]
+        return self.async_show_form(
+            step_id="frequency",
+            errors={"base": "invalid_frequency"} if user_input is not None else {},
+            data_schema=vol.Schema({
+                vol.Required(CONF_FREQUENCY, default=default): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=options)
+                ),
+            }),
+        )
 
     # ------------------------------------------------------------------
     # Screen 2: entity-type-specific options
