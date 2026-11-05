@@ -87,7 +87,7 @@ RF is one-way. A successful transmission does not prove that the fan responded. 
 ## Actions
 
 - `rf_remote.set_timer`: target a fan and set `minutes` to a delay, such as `120`; `0` cancels. Default restored-state startup behavior also restores the timer.
-- `rf_fan.safe_off`: send Speed 1, wait about one second, then send the existing power/off command.
+- `rf_remote.safe_off`: send Speed 1, wait about one second, then send the existing power/off command.
 - `rf_remote.set_light_cycle`: starting with the physical light off, select `cool`, `neutral` or `warm` to replay the configured number of light-toggle presses.
 - `rf_remote.set_assumed_state`: set fan `state` to `on`, `off` or `unknown`, with optional `percentage` and `direction` (`forward`, `reverse` or `unknown`). Does not transmit. Confirm direction before using an absolute direction action on a toggle-only remote.
 - `rf_remote.set_light_assumed_state`: correct the displayed light `state` without transmitting.

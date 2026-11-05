@@ -10,7 +10,7 @@ platform. The active integration domain is `rf_remote`. Version 3.0.0 includes a
 
 The reusable card is bundled with the integration at
 `custom_components/rf_remote/frontend/rf-fan-remote-card.js`. Home Assistant serves
-it from `/rf_fan_static/` and `frontend.py` registers it as a Lovelace module.
+it from `/rf_remote_static/` and `frontend.py` registers it as a Lovelace module. The previous `/rf_fan_static/` resource URL is detected and updated during migration.
 Users do not install a separate frontend repository or edit dashboard YAML.
 
 The visual flow is:

@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import logging
 from typing import Any
 
 LEGACY_DOMAIN = "rf_fan"
 DOMAIN = "rf_remote"
 LEGACY_ENTRY_KEY = "_legacy_rf_fan_entry_id"
+_LOGGER = logging.getLogger(__name__)
 
 
 def migrate_legacy_data(data: dict[str, Any], version: int) -> dict[str, Any]:
     """Normalize legacy config-entry data without changing learned RF commands."""
     migrated = deepcopy(dict(data))
     if version == 1:
-        legacy_customs = migrated.pop("customs", [])
-        sub_entities = list(migrated.get("sub_entities", []))
-        commands = migrated.get("commands", {})
+        legacy_customs = migrated.pop("customs", []) or []
+        sub_entities = list(migrated.get("sub_entities", []) or [])
+        commands = migrated.get("commands", {}) or {}
         for custom in legacy_customs:
             if (
                 isinstance(custom, dict)
@@ -67,12 +69,15 @@ async def async_migrate_legacy_entry(hass, entry) -> None:
                 raise ConfigEntryNotReady(
                     "The legacy RF Fan entry could not be unloaded safely"
                 )
-        elif legacy_entry.state in (
-            ConfigEntryState.SETUP_IN_PROGRESS,
-            ConfigEntryState.UNLOAD_IN_PROGRESS,
+        elif (
+            legacy_entry.state in (
+                ConfigEntryState.SETUP_IN_PROGRESS,
+                ConfigEntryState.UNLOAD_IN_PROGRESS,
+            )
+            or not legacy_entry.state.recoverable
         ):
             raise ConfigEntryNotReady(
-                "The legacy RF Fan entry is still changing state; try again shortly"
+                "The legacy RF Fan entry is not in a safe state to migrate; restart Home Assistant and try again"
             )
 
     entity_registry = er.async_get(hass)
@@ -136,7 +141,6 @@ async def async_migrate_legacy_entry(hass, entry) -> None:
     data.pop(LEGACY_ENTRY_KEY, None)
     hass.config_entries.async_update_entry(entry, data=data)
 
-    _LOGGER = __import__("logging").getLogger(__name__)
     _LOGGER.info(
         "Migrated legacy rf_fan entry %s to rf_remote entry %s; preserved %d entities",
         legacy_entry_id,
