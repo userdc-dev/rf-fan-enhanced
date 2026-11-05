@@ -15,5 +15,5 @@ async def async_get_config_entry_diagnostics(hass, entry):
     return {"version": 1, "speed_count": entry.data.get("speed_count"),
             "direct_capture": entry.data.get("direct_capture", False),
             "commands": command_summary(entry.data),
-            "last_transmission": hass.data.get("rf_fan_runtime", {}).get("last_send", {}).get(entry.data.get("transmitter")),
+            "last_transmission": hass.data.get("rf_remote_runtime", {}).get("last_send", {}).get(entry.data.get("transmitter")),
             "physical_response": "not_observable_without_feedback"}

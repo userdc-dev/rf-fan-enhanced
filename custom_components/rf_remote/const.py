@@ -1,6 +1,8 @@
-"""Constants for the rf_fan integration."""
+"""Constants for the rf_remote integration."""
 
-DOMAIN = "rf_fan"
+DOMAIN = "rf_remote"
+LEGACY_DOMAIN = "rf_fan"
+CONF_LEGACY_ENTRY_ID = "_legacy_rf_fan_entry_id"
 
 # The Broadlink integration stores its devices under this domain in hass.data.
 BROADLINK_DOMAIN = "broadlink"
@@ -64,4 +66,5 @@ FAN_POWER_MODE_TOGGLE = "toggle"
 # Times to repeat a de-noised consensus frame for direct-capture remotes.
 CLEAN_REPEAT = 10
 
-EVENT_UPDATED = "rf_fan_updated"
+EVENT_UPDATED = "rf_remote_updated"
+EVENT_UPDATED_LEGACY = "rf_fan_updated"
