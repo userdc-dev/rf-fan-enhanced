@@ -16,7 +16,18 @@ My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
-## What is new in 2.5.0
+## What is new in 2.5.5
+
+- **One card, one fan:** add **RF Fan Remote** from Home Assistant's normal card
+  picker, select exactly one configured fan and save. No YAML, entity IDs or
+  separate frontend download is required.
+- Cards use a stable integration fan identifier, follow device renames and
+  command changes, and show a clear unavailable message if their fan is deleted.
+- The generated **RF Fan remotes** sidebar remains the intentional all-fans view.
+- Developer architecture and release guidance is in
+  [DEVELOPER_HANDOVER.md](DEVELOPER_HANDOVER.md).
+
+Earlier 2.5 features include:
 
 - **Reusable RF Fan Remote card:** add it from the normal card picker, select a fan and save. The dedicated sidebar dashboard discovers configured fans automatically on desktop and in the Android Companion app.
 - **Compact mobile remote:** clearly separated fan panels, responsive controls, visible physical RF timer buttons and no unnecessary Advanced section.
@@ -43,7 +54,7 @@ Previous 2.3 features remain available:
 
 Open **Settings → Devices & services → RF Fan Enhanced → Configure** next to your remote. Menu choices are alphabetical.
 
-Open **RF Fan remotes** in the sidebar. It updates automatically when fans, names, speed counts or commands change. On another dashboard, choose **Add card → RF Fan Remote → Select Fan → Save**.
+Open **RF Fan remotes** in the sidebar for the automatic all-fans view. It updates when fans, names, speed counts or commands change. On any other dashboard, choose **Add card → RF Fan Remote → Select Fan → Save**. Each manually added card controls only the selected fan.
 
 For command edits, choose **Remote command manager**. Testing sends RF immediately; saving a replay selection only changes the pending configuration. Finish with **Save changes**.
 

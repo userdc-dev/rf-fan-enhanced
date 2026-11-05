@@ -1,4 +1,15 @@
-RF Fan Enhanced 2.5.4 improves practical Google Home voice control.
+RF Fan Enhanced 2.5.5 makes the reusable dashboard card explicitly per-fan.
+
+- Add **RF Fan Remote** from the standard Home Assistant card picker, select one
+  fan and save; no YAML, entity IDs or separate frontend installation is needed.
+- Normal cards no longer default to an all-devices remote. The generated sidebar
+  dashboard retains its intentional all-fans view.
+- The visual editor refreshes its choices when RF Fan devices change, and deleted
+  selections show a clear unavailable-device message.
+- Adds `DEVELOPER_HANDOVER.md` covering the frontend/backend contract, packaging,
+  compatibility boundaries and release checks.
+
+It also includes the 2.5.4 Google Home voice-control improvements:
 
 - Gives the existing Reverse, Wind Mode and Cycle Light Colour actions short,
   voice-friendly names when RiDDiX exposes them through Matter.

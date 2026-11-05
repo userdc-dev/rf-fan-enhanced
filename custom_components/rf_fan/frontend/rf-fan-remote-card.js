@@ -14,7 +14,7 @@ class RfFanRemoteCard extends HTMLElement {
   }
   getCardSize() { return Math.max(3, (this._selectedFans()?.length || 1) * 5); }
   static getConfigElement() { return document.createElement("rf-fan-remote-card-editor"); }
-  static getStubConfig() { return {}; }
+  static getStubConfig() { return {fan_id: ""}; }
   connectedCallback() {
     this._subscribe();
   }
@@ -44,9 +44,20 @@ class RfFanRemoteCard extends HTMLElement {
   _selectedFans() {
     const wantedFan = this._config?.fan_id;
     const wantedDevice = this._config?.device_id;
-    return (this._devices || []).flatMap(device => device.fans
-      .filter(fan => wantedFan && wantedFan !== "all" ? fan.fan_id === wantedFan : (!wantedDevice || wantedDevice === "all" || device.device_id === wantedDevice))
-      .map(fan => ({device, fan})));
+    const devices = this._devices || [];
+    if (wantedFan === "all" || wantedDevice === "all") {
+      return devices.flatMap(device => device.fans.map(fan => ({device, fan})));
+    }
+    if (wantedFan) {
+      return devices.flatMap(device => device.fans
+        .filter(fan => fan.fan_id === wantedFan)
+        .map(fan => ({device, fan})));
+    }
+    if (wantedDevice) {
+      return devices.filter(device => device.device_id === wantedDevice)
+        .flatMap(device => device.fans.map(fan => ({device, fan})));
+    }
+    return [];
   }
   _updateDynamic() {
     if (!this.shadowRoot || !this._hass) return;
@@ -159,7 +170,10 @@ class RfFanRemoteCard extends HTMLElement {
     const card = document.createElement("ha-card");
     if (this._error) { card.innerHTML = `<div class="unavailable">${this._error}</div>`; this.shadowRoot.append(card); return; }
     const fans = this._selectedFans();
-    if (!fans.length) card.innerHTML = `<div class="unavailable">This RF Fan device is unavailable or has been deleted.</div>`;
+    if (!fans.length) {
+      const selected = this._config?.fan_id || this._config?.device_id;
+      card.innerHTML = `<div class="unavailable">${selected ? "This RF Fan device is unavailable or has been deleted." : "Select an RF Fan device in the card editor."}</div>`;
+    }
     else fans.forEach(({device, fan}) => card.append(this._fanCard(device, fan)));
     this.shadowRoot.append(card);
   }
@@ -167,22 +181,35 @@ class RfFanRemoteCard extends HTMLElement {
 
 class RfFanRemoteCardEditor extends HTMLElement {
   setConfig(config) { this._config = config || {}; this._render(); }
-  set hass(hass) { this._hass = hass; if (!this._devices) this._load(); }
+  set hass(hass) { this._hass = hass; if (!this._devices) this._load(); this._subscribe(); }
+  connectedCallback() { this._subscribe(); }
+  disconnectedCallback() { this._unsubscribe?.(); this._unsubscribe = null; }
+  _subscribe() {
+    if (this._hass && this.isConnected && !this._unsubscribe && !this._subscribing) {
+      this._subscribing = true;
+      this._hass.connection.subscribeEvents(() => this._load(), "rf_fan_updated")
+        .then(unsub => this._unsubscribe = unsub)
+        .finally(() => this._subscribing = false);
+    }
+  }
   async _load() { this._devices = await this._hass.callWS({type:"rf_fan/devices"}); this._render(); }
   _render() {
     if (!this._hass) return;
     this.innerHTML = `<div style="padding:12px"><label>RF Fan device<br><select style="width:100%;margin-top:6px;padding:8px"></select></label></div>`;
     const select = this.querySelector("select");
-    select.add(new Option("All RF Fan devices", "all"));
+    const placeholder = new Option("Select a fan…", "");
+    placeholder.disabled = true;
+    select.add(placeholder);
     (this._devices || []).forEach(device => device.fans.forEach(fan => {
-      const label = device.fans.length > 1 ? `${device.name} — ${fan.name}` : device.name;
+      const label = device.fans.length > 1 ? `${device.name} — ${fan.name}` : (fan.name || device.name);
       select.add(new Option(label, fan.fan_id));
     }));
     const legacyDevice = this._config?.device_id;
     const legacyFan = legacyDevice && legacyDevice !== "all"
       ? (this._devices || []).find(device => device.device_id === legacyDevice)?.fans?.[0]?.fan_id
       : null;
-    select.value = this._config?.fan_id || legacyFan || "all";
+    const selectedFan = this._config?.fan_id === "all" ? "" : (this._config?.fan_id || legacyFan || "");
+    select.value = [...select.options].some(option => option.value === selectedFan) ? selectedFan : "";
     select.onchange = () => {
       const config = {...this._config};
       delete config.device_id;
