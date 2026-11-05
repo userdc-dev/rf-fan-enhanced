@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['custom_components/rf_fan/manifest.json']
+    paths: ['custom_components/rf_remote/manifest.json']
 permissions:
   contents: read
 jobs:
@@ -27,7 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(python -c 'import json; print(json.load(open("custom_components/rf_fan/manifest.json"))["version"])')
+          version=$(python -c 'import json; print(json.load(open("custom_components/rf_remote/manifest.json"))["version"])')
           if gh release view "$version" >/dev/null 2>&1; then
             echo "Release $version already exists"
           else
