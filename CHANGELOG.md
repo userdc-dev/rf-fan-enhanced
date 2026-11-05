@@ -1,6 +1,6 @@
 # 3.0.0 — 2026-11-06
 
-Changed the integration domain from `rf_fan` to `rf_remote`. Added a guided migration that backs up legacy config entries, transfers learned commands/options, and moves entity/device registry ownership while preserving entity IDs and device IDs. Kept legacy `rf_fan.*` service aliases and historic dashboard, snapshot and command-export identifiers; existing frontend resources are upgraded automatically.
+Changed the integration domain from `rf_fan` to `rf_remote`. Added a guided migration that backs up legacy config entries, transfers learned commands/options, and moves entity/device registry ownership while preserving entity IDs, device IDs and saved one-fan card selections. Kept legacy `rf_fan.*` service aliases and historic dashboard, snapshot and command-export identifiers; existing frontend resources are upgraded automatically.
 
 # 2.5.6 — 2026-11-06
 

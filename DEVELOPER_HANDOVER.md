@@ -4,7 +4,7 @@
 
 RF Remote Enhanced is a Home Assistant custom integration for learning and replaying
 one-way RF ceiling-fan commands through Home Assistant's `radio_frequency`
-platform. The active integration domain is `rf_remote`. Version 3.0.0 includes a guided migration from legacy `rf_fan` config entries. The migration transfers entry data/options, updates entity and device registry ownership, and preserves entity IDs and device IDs. Keep the legacy service aliases and stored command format until a future explicitly announced removal.
+platform. The active integration domain is `rf_remote`. Version 3.0.0 includes a guided migration from legacy `rf_fan` config entries. The migration transfers entry data/options, updates entity and device registry ownership, and preserves entity IDs, device IDs and saved Lovelace fan selections. Keep the legacy service aliases and stored command format until a future explicitly announced removal.
 
 ## Per-device Lovelace card
 
@@ -87,7 +87,7 @@ the user adds RF Remote Enhanced.
 
 The migration first creates a private snapshot, unloads the legacy entry when
 possible, changes each entity-registry platform and unique ID to the new domain
-while keeping the existing entity ID, moves the device-registry entry to the
+while keeping the existing entity ID, retains the legacy stable `fan_id` used by saved cards, moves the device-registry entry to the
 new config entry while keeping its device ID, and then removes the old config
 entry. Never edit `.storage` directly. The old service namespace
 `rf_fan.*` remains registered as an alias for existing automations; the

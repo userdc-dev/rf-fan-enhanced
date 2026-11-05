@@ -79,8 +79,8 @@ async def async_migrate_legacy_entry(hass, entry) -> None:
             legacy_entry.state in (
                 ConfigEntryState.SETUP_IN_PROGRESS,
                 ConfigEntryState.UNLOAD_IN_PROGRESS,
+                ConfigEntryState.FAILED_UNLOAD,
             )
-            or not legacy_entry.state.recoverable
         ):
             raise ConfigEntryNotReady(
                 "The legacy RF Fan entry is not in a safe state to migrate; restart Home Assistant and try again"

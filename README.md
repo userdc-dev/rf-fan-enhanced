@@ -19,7 +19,7 @@ If HACS does not discover the repository automatically, add `https://github.com/
 ## What's new in 3.0.0
 
 - Changes the Home Assistant integration domain from `rf_fan` to `rf_remote`.
-- Adds a guided migration for existing RF Fan Enhanced entries. It backs up the old entry, transfers learned RF commands and options, and migrates entity/device registry records while preserving existing entity IDs and device IDs.
+- Adds a guided migration for existing RF Fan Enhanced entries. It backs up the old entry, transfers learned RF commands and options, and migrates entity/device registry records while preserving existing entity IDs, device IDs and saved one-fan card selections.
 - Keeps the legacy `rf_fan.*` service names as compatibility aliases; new automations should use `rf_remote.*`.
 - Retains historic dashboard, snapshot-folder and command-export identifiers; automatically updates the existing Lovelace resource to the new frontend URL.
 
@@ -96,7 +96,7 @@ Standard fan/light entities can be exposed by Matter Hub or other Home Assistant
 
 ## Upgrades and backups
 
-The active integration domain is now `rf_remote`. After upgrading and restarting Home Assistant, add **RF Remote Enhanced** from **Settings → Devices & services → Add integration**. If old `rf_fan` entries are detected, choose **Migrate an existing RF Fan device** and select each remote. The migration creates a private backup, transfers learned commands and options, and updates the entity/device registries while preserving existing entity IDs and device IDs. Do not delete old entries manually or edit Home Assistant `.storage` files. Back up Home Assistant before upgrading.
+The active integration domain is now `rf_remote`. After upgrading and restarting Home Assistant, add **RF Remote Enhanced** from **Settings → Devices & services → Add integration**. If old `rf_fan` entries are detected, choose **Migrate an existing RF Fan device** and select each remote. The migration creates a private backup, transfers learned commands and options, and updates the entity/device registries while preserving existing entity IDs, device IDs and saved one-fan card selections. Do not delete old entries manually or edit Home Assistant `.storage` files. Back up Home Assistant before upgrading.
 
 Private automatic snapshots are stored under `rf_fan_safety` in your Home Assistant configuration folder. Command exports contain replayable RF signals; keep them private. Diagnostics omit those signals. The generated dashboard stores entity controls only.
 

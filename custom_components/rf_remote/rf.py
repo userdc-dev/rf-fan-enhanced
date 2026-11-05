@@ -1,4 +1,4 @@
-"""Core RF helpers for the rf_fan integration.
+"""Core RF helpers for the rf_remote integration.
 
 Decodes Broadlink RF pulse packets into raw OOK timings - the inverse of
 ``homeassistant.components.broadlink.radio_frequency.encode_rf_packet`` - and
@@ -93,13 +93,13 @@ async def async_sweep_frequency(device: Any) -> float:
     """
     api = device.api
     await device.async_request(api.sweep_frequency)
-    _LOGGER.debug("rf_fan: sweeping - PRESS AND HOLD the remote button now")
+    _LOGGER.debug("rf_remote: sweeping - PRESS AND HOLD the remote button now")
     deadline = time.monotonic() + LEARNING_TIMEOUT
     while time.monotonic() < deadline:
         await asyncio.sleep(1)
         is_found, frequency = await device.async_request(api.check_frequency)
         if is_found:
-            _LOGGER.debug("rf_fan: detected RF at ~%s MHz", frequency)
+            _LOGGER.debug("rf_remote: detected RF at ~%s MHz", frequency)
             return frequency
     await device.async_request(api.cancel_sweep_frequency)
     raise TimeoutError("No RF frequency detected - hold the button during the sweep")
@@ -120,10 +120,10 @@ async def async_capture_packet(
     await device.async_request(api.find_rf_packet, frequency)
     if frequency:
         _LOGGER.debug(
-            "rf_fan: listening at %.3f MHz - PRESS the button once", frequency
+            "rf_remote: listening at %.3f MHz - PRESS the button once", frequency
         )
     else:
-        _LOGGER.debug("rf_fan: locked on - RELEASE, then PRESS the same button again")
+        _LOGGER.debug("rf_remote: locked on - RELEASE, then PRESS the same button again")
     deadline = time.monotonic() + LEARNING_TIMEOUT
     while time.monotonic() < deadline:
         await asyncio.sleep(1)
@@ -133,7 +133,7 @@ async def async_capture_packet(
             continue  # nothing captured yet, keep polling
         timings, repeat = decode_broadlink_packet(code)
         _LOGGER.debug(
-            "rf_fan: captured %d pulses (raw repeat byte=%d, ignored on resend)",
+            "rf_remote: captured %d pulses (raw repeat byte=%d, ignored on resend)",
             len(timings),
             repeat,
         )
