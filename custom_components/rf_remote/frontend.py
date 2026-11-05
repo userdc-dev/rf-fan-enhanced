@@ -148,9 +148,16 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
     # Serve the renamed domain path. Existing Lovelace resources are updated
     # from the legacy URL below, avoiding a collision if the old component is
     # still loaded during migration.
-    await hass.http.async_register_static_paths([
+    static_paths = [
         StaticPathConfig("/rf_remote_static", str(folder), cache_headers=False)
-    ])
+    ]
+    # Keep the old URL as an alias when the legacy component has not already
+    # registered it. This also supports manually configured old resources.
+    if not hass.data.get("rf_fan", {}).get("frontend_setup"):
+        static_paths.append(
+            StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
+        )
+    await hass.http.async_register_static_paths(static_paths)
     # The fallback covers startup before Lovelace exists. The persistent
     # resource below is what fresh Android Companion App WebViews consume.
     frontend.add_extra_js_url(hass, CARD_URL)
