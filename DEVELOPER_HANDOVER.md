@@ -28,8 +28,8 @@ editor.
 
 The card obtains safe metadata through the `rf_remote/devices` WebSocket command in
 `frontend.py`. Replayable RF data must never be returned to the browser. The
-`rf_fan_updated` event refreshes cards and open editors when devices, commands or
-names change. A manually placed card whose device was deleted remains in the
+`rf_remote_updated` event refreshes cards and open editors when devices, commands or
+names change. The legacy `rf_fan_updated` event is also fired for compatibility. A manually placed card whose device was deleted remains in the
 user's dashboard and displays an unavailable-device message.
 
 ## Backend/frontend contract

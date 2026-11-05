@@ -21,7 +21,7 @@ If HACS does not discover the repository automatically, add `https://github.com/
 - Changes the Home Assistant integration domain from `rf_fan` to `rf_remote`.
 - Adds a guided migration for existing RF Fan Enhanced entries. It backs up the old entry, transfers learned RF commands and options, and migrates entity/device registry records while preserving existing entity IDs and device IDs.
 - Keeps the legacy `rf_fan.*` service names as compatibility aliases; new automations should use `rf_remote.*`.
-- Retains historic dashboard, frontend resource, snapshot-folder and command-export identifiers where changing them would break existing user data.
+- Retains historic dashboard, snapshot-folder and command-export identifiers; automatically updates the existing Lovelace resource to the new frontend URL.
 
 ## What's new in 2.5.6
 
@@ -100,7 +100,7 @@ The active integration domain is now `rf_remote`. After upgrading and restarting
 
 Private automatic snapshots are stored under `rf_fan_safety` in your Home Assistant configuration folder. Command exports contain replayable RF signals; keep them private. Diagnostics omit those signals. The generated dashboard stores entity controls only.
 
-The old `rf_fan.*` service names remain available as aliases for existing automations. The private snapshot folder (`rf_fan_safety`), generated dashboard storage key, frontend URL and command-export format retain their historical names intentionally for compatibility.
+The old `rf_fan.*` service names remain available as aliases for existing automations. The private snapshot folder (`rf_fan_safety`), generated dashboard storage key, card type and command-export format retain their historical names intentionally; the frontend resource is updated automatically to `/rf_remote_static/`.
 
 ## Validation
 
