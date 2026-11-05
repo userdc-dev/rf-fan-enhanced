@@ -1,4 +1,5 @@
 {
-  "name": "RF Fan Enhanced",
-  "homeassistant": "2026.9.2"
+  "name": "RF Remote Enhanced",
+  "homeassistant": "2026.9.2",
+  "render_readme": true
 }
