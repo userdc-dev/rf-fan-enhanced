@@ -1,8 +1,8 @@
-# RF Fan Enhanced developer handover
+# RF Remote Enhanced developer handover
 
 ## Purpose
 
-RF Fan Enhanced is a Home Assistant custom integration for learning and replaying
+RF Remote Enhanced is a Home Assistant custom integration for learning and replaying
 one-way RF ceiling-fan commands through Home Assistant's `radio_frequency`
 platform. The `rf_fan` domain, config-entry IDs, entity unique IDs and stored RF
 packets are compatibility boundaries: do not change them during routine updates.

@@ -1,22 +1,28 @@
-# RF Fan Enhanced
+# RF Remote Enhanced
 
-Learn and control RF ceiling fans and remote buttons from Home Assistant using an RF-capable Broadlink device.
+Learn and control compatible RF ceiling fans, lights, covers and remote buttons from Home Assistant using a Broadlink RF transmitter.
 
 ## Install
 
-[![Open RF Fan Enhanced in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=userdc-dev&repository=rf-fan-enhanced&category=integration)
+[![Open RF Remote Enhanced in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=userdc-dev&repository=rf-fan-enhanced&category=integration)
 
 Download in HACS, restart Home Assistant, then add your RF remote:
 
-[![Add RF Fan Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
+[![Add RF Remote Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
 
-**Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured RF-capable Broadlink RM Pro / RM4 Pro. You may try using ESP home or another RF remote however my testing was done using Broadlink RM 4 pro. Your transmitter must appear as a `radio_frequency` entity. RF commands need to be learned from your own remote. Try to keep your RF transmitter close to furthest away devices (by trying to place around center of place or any other ways).
+**Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured Broadlink RM Pro / RM4 Pro. The current learning and replay backend is Broadlink-based; ESPHome, Tuya and other transmitter backends are not yet implemented. The Broadlink transmitter must be available to Home Assistant through `radio_frequency`. RF commands need to be learned from your own remote. For best coverage, place the transmitter near the centre of the area it needs to reach.
 
 My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan with LED Light. (both came with remotes and I used this project to replace them). Contact- divy@dcgogna.com or via Github messages for any extra information.
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
-## What is new in 2.5.5
+## What's new in 2.5.6
+
+- Rebrands the published integration as **RF Remote Enhanced** in HACS and Home Assistant.
+- Keeps the internal `rf_fan` domain unchanged, preserving existing config entries, entity IDs, services and learned RF commands.
+- Does not change transmitter compatibility: the current learning and replay backend remains Broadlink-based.
+
+## What's new in 2.5.5
 
 - **One card, one fan:** add **RF Fan Remote** from Home Assistant's normal card
   picker, select exactly one configured fan and save. No YAML, entity IDs or
@@ -52,7 +58,7 @@ Previous 2.3 features remain available:
 
 ## Everyday use
 
-Open **Settings → Devices & services → RF Fan Enhanced → Configure** next to your remote. Menu choices are alphabetical.
+Open **Settings → Devices & services → RF Remote Enhanced → Configure** next to your remote. Menu choices are alphabetical.
 
 Open **RF Fan remotes** in the sidebar for the automatic all-fans view. It updates when fans, names, speed counts or commands change. On any other dashboard, choose **Add card → RF Fan Remote → Select Fan → Save**. Each manually added card controls only the selected fan.
 

@@ -31,5 +31,5 @@ jobs:
           if gh release view "$version" >/dev/null 2>&1; then
             echo "Release $version already exists"
           else
-            gh release create "$version" --target "$GITHUB_SHA" --title "RF Fan Enhanced $version" --notes-file RELEASE_NOTES.md
+            gh release create "$version" --target "$GITHUB_SHA" --title "RF Remote Enhanced $version" --notes-file RELEASE_NOTES.md
           fi
