@@ -22,7 +22,7 @@ from .const import (
 from .extra_buttons import EXTRA_BUTTONS
 
 CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.5"
+CARD_URL = f"{CARD_PATH}?v=3.0.0"
 
 
 def _category(key: str) -> str:
@@ -106,7 +106,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     return result
 
 
-@websocket_api.websocket_command({vol.Required("type"): "rf_fan/devices"})
+@websocket_api.websocket_command({vol.Required("type"): "rf_remote/devices"})
 @websocket_api.async_response
 async def websocket_devices(hass, connection, msg):
     """Return safe metadata only; RF packets never leave the backend."""
@@ -140,9 +140,11 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
     if state.get("frontend_setup"):
         return
     folder = Path(__file__).parent / "frontend"
-    await hass.http.async_register_static_paths([
-        StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
-    ])
+    # Reuse the legacy URL so existing Lovelace resources and dashboards survive.
+    if not hass.data.get("rf_fan", {}).get("frontend_setup"):
+        await hass.http.async_register_static_paths([
+            StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
+        ])
     # The fallback covers startup before Lovelace exists. The persistent
     # resource below is what fresh Android Companion App WebViews consume.
     frontend.add_extra_js_url(hass, CARD_URL)

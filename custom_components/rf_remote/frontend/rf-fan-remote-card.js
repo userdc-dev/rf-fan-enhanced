@@ -21,7 +21,7 @@ class RfFanRemoteCard extends HTMLElement {
   _subscribe() {
     if (this._hass && this.isConnected && !this._unsubscribe && !this._subscribing) {
       this._subscribing = true;
-      this._hass.connection.subscribeEvents(() => this._refresh(), "rf_fan_updated")
+      this._hass.connection.subscribeEvents(() => this._refresh(), "rf_remote_updated")
         .then(unsub => this._unsubscribe = unsub)
         .finally(() => this._subscribing = false);
     }
@@ -30,7 +30,7 @@ class RfFanRemoteCard extends HTMLElement {
   async _refresh() {
     if (!this._hass || this._loading) return;
     this._loading = true;
-    try { this._devices = await this._hass.callWS({type: "rf_fan/devices"}); }
+    try { this._devices = await this._hass.callWS({type: "rf_remote/devices"}); }
     catch (err) {
       this._error = err?.message || err?.code || "Unable to load RF Fan remotes. Check Home Assistant logs.";
     }
@@ -40,7 +40,7 @@ class RfFanRemoteCard extends HTMLElement {
   _call(domain, service, entity_id, data={}) {
     return this._hass.callService(domain, service, data, {entity_id});
   }
-  _command(fan, command) { return this._call("rf_fan", "send_command", fan.entity_id, {command}); }
+  _command(fan, command) { return this._call("rf_remote", "send_command", fan.entity_id, {command}); }
   _selectedFans() {
     const wantedFan = this._config?.fan_id;
     const wantedDevice = this._config?.device_id;
@@ -102,7 +102,7 @@ class RfFanRemoteCard extends HTMLElement {
     if (!state) { wrap.append(title, Object.assign(document.createElement("p"), {textContent: "This RF Fan device is unavailable."})); return wrap; }
     const controls = document.createElement("div"); controls.className = "buttons fan-controls";
     controls.append(this._button("Power", () => this._call("homeassistant", "toggle", fan.entity_id)));
-    if (fan.safe_off_enabled) controls.append(this._button("Safe OFF", () => this._call("rf_fan", "safe_off", fan.entity_id), "danger"));
+    if (fan.safe_off_enabled) controls.append(this._button("Safe OFF", () => this._call("rf_remote", "safe_off", fan.entity_id), "danger"));
     const speedCommands = fan.commands.filter(c => /^speed_\d+$/.test(c.key)).sort((a,b) => Number(a.key.split("_")[1])-Number(b.key.split("_")[1]));
     const speeds = document.createElement("div"); speeds.className = "buttons speeds";
     speedCommands.slice(0, fan.speed_count).forEach((cmd, index) => speeds.append(this._button(String(index + 1), () => this._call("fan", "set_percentage", fan.entity_id, {percentage: Math.round((index + 1) * 100 / fan.speed_count)}))));
@@ -120,7 +120,7 @@ class RfFanRemoteCard extends HTMLElement {
       const cycleButtons = document.createElement("div"); cycleButtons.className = "buttons";
       [["cool","Sequence 1"],["neutral","Sequence 2"],["warm","Sequence 3"]].forEach(([mode,label]) => {
         const clicks = fan.light_cycle[mode];
-        cycleButtons.append(this._button(`${label} · Send ${clicks}×`, () => this._call("rf_fan", "set_light_cycle", fan.entity_id, {mode})));
+        cycleButtons.append(this._button(`${label} · Send ${clicks}×`, () => this._call("rf_remote", "set_light_cycle", fan.entity_id, {mode})));
       });
       const note = document.createElement("div"); note.className = "diagnostics"; note.textContent = "Relative button presses; the RF light colour is not confirmed.";
       cycleSection.append(cycleLabel, cycleButtons, note);
@@ -135,14 +135,14 @@ class RfFanRemoteCard extends HTMLElement {
     unit.value = this._units[fan.entity_id] || "minutes"; unit.onchange = () => this._units[fan.entity_id] = unit.value;
     const start = this._button(state.attributes.timer_remaining_seconds ? "Restart" : "Start", () => {
       const value = Number(input.value); if (!(value > 0)) return;
-      this._call("rf_fan", "set_timer", fan.entity_id, {minutes: value * (unit.value === "hours" ? 60 : 1)});
+      this._call("rf_remote", "set_timer", fan.entity_id, {minutes: value * (unit.value === "hours" ? 60 : 1)});
     });
     start.dataset.role = "timer-start"; start.dataset.entity = fan.entity_id;
     row.append(input, unit, start);
     const remaining = document.createElement("div"); remaining.className = "remaining";
     remaining.dataset.role = "timer-remaining"; remaining.dataset.entity = fan.entity_id;
     remaining.append(document.createTextNode(`Remaining: ${state.attributes.timer_remaining || "0:00:00"} `));
-    remaining.append(this._button("Cancel", () => this._call("rf_fan", "set_timer", fan.entity_id, {minutes: 0}), "link"));
+    remaining.append(this._button("Cancel", () => this._call("rf_remote", "set_timer", fan.entity_id, {minutes: 0}), "link"));
     timer.append(timerLabel, row, remaining);
     wrap.append(title, controls, speeds);
     const modeSection = this._section("Modes", modes, fan); if (modeSection) wrap.append(modeSection);
@@ -187,12 +187,12 @@ class RfFanRemoteCardEditor extends HTMLElement {
   _subscribe() {
     if (this._hass && this.isConnected && !this._unsubscribe && !this._subscribing) {
       this._subscribing = true;
-      this._hass.connection.subscribeEvents(() => this._load(), "rf_fan_updated")
+      this._hass.connection.subscribeEvents(() => this._load(), "rf_remote_updated")
         .then(unsub => this._unsubscribe = unsub)
         .finally(() => this._subscribing = false);
     }
   }
-  async _load() { this._devices = await this._hass.callWS({type:"rf_fan/devices"}); this._render(); }
+  async _load() { this._devices = await this._hass.callWS({type:"rf_remote/devices"}); this._render(); }
   _render() {
     if (!this._hass) return;
     this.innerHTML = `<div style="padding:12px"><label>RF Fan device<br><select style="width:100%;margin-top:6px;padding:8px"></select></label></div>`;

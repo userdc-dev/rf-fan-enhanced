@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .command import async_send_stored
+from .compat import async_register_legacy_entity_service
 from .const import (
     CLEAN_REPEAT,
     CMD_LIGHT,
@@ -41,8 +42,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the light entity."""
-    entity_platform.async_get_current_platform().async_register_entity_service(
-        "set_light_assumed_state", {vol.Required("state"): vol.In(["on", "off", "unknown"])}, "async_set_assumed_state")
+    platform = entity_platform.async_get_current_platform()
+    schema = {vol.Required("state"): vol.In(["on", "off", "unknown"])}
+    platform.async_register_entity_service(
+        "set_light_assumed_state", schema, "async_set_assumed_state"
+    )
+    async_register_legacy_entity_service(
+        platform, "set_light_assumed_state", schema, "async_set_assumed_state"
+    )
     data = entry.data
     entities: list[LightEntity] = []
     commands = data[CONF_COMMANDS]
