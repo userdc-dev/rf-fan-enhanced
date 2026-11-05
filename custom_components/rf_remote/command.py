@@ -128,7 +128,7 @@ async def async_send_stored(
         command = CapturedCommand(frequency=frequency, timings=timings, repeat_count=repeat)
         async def send():
             await async_send_command(hass, transmitter, command)
-    runtime = hass.data.setdefault("rf_fan_runtime", {})
+    runtime = hass.data.setdefault("rf_remote_runtime", {})
     lock = runtime.setdefault("locks", {}).setdefault(transmitter, asyncio.Lock())
     status = {"mode": mode or "legacy", "time": datetime.now(timezone.utc).isoformat()}
     try:

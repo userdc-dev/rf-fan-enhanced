@@ -1,3 +1,7 @@
+# 3.0.0 — 2026-11-06
+
+Changed the integration domain from `rf_fan` to `rf_remote`. Added a guided migration that backs up legacy config entries, transfers learned commands/options, and moves entity/device registry ownership while preserving entity IDs, device IDs and saved one-fan card selections. Kept legacy `rf_fan.*` service aliases and historic dashboard, snapshot and command-export identifiers; existing frontend resources are upgraded automatically.
+
 # 2.5.6 — 2026-11-06
 
 Rebranded the HACS listing and Home Assistant integration display name to **RF Remote Enhanced**. The internal `rf_fan` domain and all existing config-entry, entity and learned-command compatibility boundaries are preserved. No transmitter-backend changes.

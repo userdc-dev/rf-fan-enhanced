@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-spec=importlib.util.spec_from_file_location('manager',Path(__file__).parents[1]/'custom_components/rf_fan/manager.py')
+spec=importlib.util.spec_from_file_location('manager',Path(__file__).parents[1]/'custom_components/rf_remote/manager.py')
 manager=importlib.util.module_from_spec(spec); spec.loader.exec_module(manager)
 
 class CommandExchange(unittest.TestCase):

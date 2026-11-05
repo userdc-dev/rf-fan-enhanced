@@ -1,4 +1,4 @@
-"""Fan platform for rf_fan - an optimistic, discrete-speed RF fan."""
+"""Fan platform for rf_remote - an optimistic, discrete-speed RF fan."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from homeassistant.util.percentage import (
 )
 
 from .command import async_send_stored
+from .compat import async_register_legacy_entity_service
 from .const import (
     CLEAN_REPEAT,
     CMD_OFF,
@@ -56,17 +57,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the fan entity from a config entry."""
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service("set_timer", {vol.Required("minutes"): vol.All(vol.Coerce(float), vol.Range(min=0))}, "async_set_timer")
-    platform.async_register_entity_service("safe_off", {}, "async_safe_off")
-    platform.async_register_entity_service("send_command", {vol.Required("command"): cv.string}, "async_send_command")
-    platform.async_register_entity_service("set_light_cycle", {
-        vol.Required("mode"): vol.In(["cool", "neutral", "warm"]),
-    }, "async_set_light_cycle")
-    platform.async_register_entity_service("set_assumed_state", {
-        vol.Required("state"): vol.In(["on", "off", "unknown"]),
-        vol.Optional("percentage"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-        vol.Optional("direction"): vol.In(["forward", "reverse", "unknown"]),
-    }, "async_set_assumed_state")
+    service_specs = (
+        ("set_timer", {vol.Required("minutes"): vol.All(vol.Coerce(float), vol.Range(min=0))}, "async_set_timer"),
+        ("safe_off", {}, "async_safe_off"),
+        ("send_command", {vol.Required("command"): cv.string}, "async_send_command"),
+        ("set_light_cycle", {
+            vol.Required("mode"): vol.In(["cool", "neutral", "warm"]),
+        }, "async_set_light_cycle"),
+        ("set_assumed_state", {
+            vol.Required("state"): vol.In(["on", "off", "unknown"]),
+            vol.Optional("percentage"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+            vol.Optional("direction"): vol.In(["forward", "reverse", "unknown"]),
+        }, "async_set_assumed_state"),
+    )
+    for service_name, schema, method in service_specs:
+        platform.async_register_entity_service(service_name, schema, method)
+        async_register_legacy_entity_service(platform, service_name, schema, method)
     data = entry.data
     entities: list[FanEntity] = []
     operation_lock = asyncio.Lock()
@@ -452,7 +458,7 @@ class RfFan(FanEntity, RestoreEntity):
                 "timer_end": self._timer_end.isoformat() if self._timer_end else None,
                 "timer_remaining": str(timedelta(seconds=remaining)),
                 "timer_remaining_seconds": remaining,
-                "last_transmission": self.hass.data.get("rf_fan_runtime", {}).get("last_send", {}).get(self._transmitter)}
+                "last_transmission": self.hass.data.get("rf_remote_runtime", {}).get("last_send", {}).get(self._transmitter)}
 
     async def async_set_assumed_state(self, state, percentage=None, direction=None):
         async with self._operation_lock:

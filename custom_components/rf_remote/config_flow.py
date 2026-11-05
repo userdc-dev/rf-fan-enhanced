@@ -1,4 +1,4 @@
-"""Config and options flows for rf_fan.
+"""Config and options flows for rf_remote.
 
 Setup is split into two screens:
   Screen 1 – device name, primary entity type, RF transmitter & frequency.
@@ -60,6 +60,8 @@ from .const import (
     CONF_TRANSMITTER,
     DEFAULT_FREQUENCY,
     DOMAIN,
+    LEGACY_DOMAIN,
+    CONF_LEGACY_ENTRY_ID,
     ENTITY_TYPE_BUTTON,
     ENTITY_TYPE_COVER,
     ENTITY_TYPE_FAN,
@@ -73,6 +75,7 @@ from .const import (
 from .rf import async_capture_packet, async_sweep_frequency, find_rf_devices
 
 from .extra_buttons import EXTRA_BUTTONS
+from .migration import migrate_legacy_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -410,7 +413,7 @@ class _LearnFlowMixin:
 # ---------------------------------------------------------------------------
 # Config flow
 # ---------------------------------------------------------------------------
-class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
+class RfRemoteConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
     """Two-screen setup wizard + button-learning for an RF device."""
 
     VERSION = 2
@@ -442,13 +445,58 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry) -> OptionsFlow:
         """Return the options flow (re-learn / add buttons)."""
-        return RfFanOptionsFlow()
+        return RfRemoteOptionsFlow()
 
     # ------------------------------------------------------------------
     # Screen 1: name + entity type + transmitter + frequency
     # ------------------------------------------------------------------
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Collect the device's name, transmitter and type."""
+        """Offer migration when legacy rf_fan entries are present."""
+        if self.hass.config_entries.async_entries(LEGACY_DOMAIN):
+            return self.async_show_menu(
+                step_id="user",
+                menu_options=["migrate_legacy", "new_device"],
+            )
+        return await self.async_step_new_device(user_input)
+
+    async def async_step_migrate_legacy(self, user_input=None) -> ConfigFlowResult:
+        """Import one existing rf_fan remote without relearning its commands."""
+        legacy_entries = self.hass.config_entries.async_entries(LEGACY_DOMAIN)
+        if not legacy_entries:
+            return self.async_abort(reason="no_legacy_entries")
+
+        if user_input is not None:
+            legacy_id = user_input["legacy_entry"]
+            legacy_entry = self.hass.config_entries.async_get_entry(legacy_id)
+            if legacy_entry is None or legacy_entry.domain != LEGACY_DOMAIN:
+                return self.async_abort(reason="no_legacy_entries")
+            if any(
+                entry.data.get(CONF_LEGACY_ENTRY_ID) == legacy_id
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+            ):
+                return self.async_abort(reason="already_migrated")
+
+            data = migrate_legacy_data(dict(legacy_entry.data), legacy_entry.version)
+            data[CONF_LEGACY_ENTRY_ID] = legacy_entry.entry_id
+            return self.async_create_entry(
+                title=legacy_entry.title,
+                data=data,
+                options=dict(legacy_entry.options),
+            )
+
+        options = [
+            selector.SelectOptionDict(value=entry.entry_id, label=entry.title)
+            for entry in legacy_entries
+        ]
+        schema = vol.Schema({
+            vol.Required("legacy_entry"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=options)
+            )
+        })
+        return self.async_show_form(step_id="migrate_legacy", data_schema=schema)
+
+    async def async_step_new_device(self, user_input=None) -> ConfigFlowResult:
+        """Collect a new device's name, type, transmitter and frequency."""
         devices = find_rf_devices(self.hass)
         if not devices:
             return self.async_abort(reason="no_rf_device")
@@ -482,7 +530,7 @@ class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
                 selector.SelectSelectorConfig(options=FREQ_OPTIONS)
             ),
         })
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="new_device", data_schema=schema)
 
     # ------------------------------------------------------------------
     # Screen 2: entity-type-specific options
@@ -646,7 +694,7 @@ def _ordered_menu(options):
     return [*ordered, "finish"] if "finish" in options else ordered
 
 
-class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
+class RfRemoteOptionsFlow(_LearnFlowMixin, OptionsFlow):
     """Re-learn existing buttons or add new sub-entities after setup."""
 
     def __init__(self) -> None:

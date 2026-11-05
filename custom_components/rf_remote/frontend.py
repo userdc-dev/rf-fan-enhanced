@@ -20,9 +20,12 @@ from .const import (
     DOMAIN,
 )
 from .extra_buttons import EXTRA_BUTTONS
+from .migration import get_stable_entry_id
 
-CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.5"
+CARD_PATH = "/rf_remote_static/rf-fan-remote-card.js"
+LEGACY_CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
+CARD_URL = f"{CARD_PATH}?v=3.0.0"
+LEGACY_CARD_URL = f"{LEGACY_CARD_PATH}?v=2.5.5"
 
 
 def _category(key: str) -> str:
@@ -47,6 +50,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     result = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         data = entry.data
+        stable_entry_id = get_stable_entry_id(data, entry.entry_id)
         commands = data.get(CONF_COMMANDS, {})
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, entry.entry_id), entry.entry_id
@@ -88,7 +92,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
             light_unique = f"{entry.entry_id}_light_{prefix}" if prefix else f"{entry.entry_id}_light"
             fans.append({
                 **item,
-                "fan_id": f"{entry.entry_id}:{prefix or 'primary'}",
+                "fan_id": f"{stable_entry_id}:{prefix or 'primary'}",
                 "entity_id": fan_entity,
                 "light_entity_id": by_unique.get(("light", light_unique)),
                 "safe_off_enabled": bool(data.get(CONF_SAFE_OFF, any(c["key"] == "speed_1" for c in available) and any(c["key"] == "off" for c in available))),
@@ -106,7 +110,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     return result
 
 
-@websocket_api.websocket_command({vol.Required("type"): "rf_fan/devices"})
+@websocket_api.websocket_command({vol.Required("type"): "rf_remote/devices"})
 @websocket_api.async_response
 async def websocket_devices(hass, connection, msg):
     """Return safe metadata only; RF packets never leave the backend."""
@@ -123,13 +127,14 @@ async def _async_register_persistent_resource(hass: HomeAssistant) -> bool:
     resources = lovelace.resources
     await resources.async_get_info()
     existing = next(
-        (item for item in resources.async_items() if item.get("url", "").split("?", 1)[0] == CARD_PATH),
+        (item for item in resources.async_items() if item.get("url", "").split("?", 1)[0] in {CARD_PATH, LEGACY_CARD_PATH}),
         None,
     )
     if existing is None:
         await resources.async_create_item({"url": CARD_URL, "res_type": "module"})
     elif existing.get("url") != CARD_URL or existing.get("type") != "module":
         await resources.async_update_item(existing["id"], {"url": CARD_URL, "res_type": "module"})
+    frontend.remove_extra_js_url(hass, LEGACY_CARD_URL)
     frontend.remove_extra_js_url(hass, CARD_URL)
     return True
 
@@ -140,9 +145,19 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
     if state.get("frontend_setup"):
         return
     folder = Path(__file__).parent / "frontend"
-    await hass.http.async_register_static_paths([
-        StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
-    ])
+    # Serve the renamed domain path. Existing Lovelace resources are updated
+    # from the legacy URL below, avoiding a collision if the old component is
+    # still loaded during migration.
+    static_paths = [
+        StaticPathConfig("/rf_remote_static", str(folder), cache_headers=False)
+    ]
+    # Keep the old URL as an alias when the legacy component has not already
+    # registered it. This also supports manually configured old resources.
+    if not hass.data.get("rf_fan", {}).get("frontend_setup"):
+        static_paths.append(
+            StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
+        )
+    await hass.http.async_register_static_paths(static_paths)
     # The fallback covers startup before Lovelace exists. The persistent
     # resource below is what fresh Android Companion App WebViews consume.
     frontend.add_extra_js_url(hass, CARD_URL)

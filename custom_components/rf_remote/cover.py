@@ -1,4 +1,4 @@
-"""Cover platform for rf_fan - an optimistic RF cover (blinds, awnings, etc.)."""
+"""Cover platform for rf_remote - an optimistic RF cover (blinds, awnings, etc.)."""
 
 from __future__ import annotations
 

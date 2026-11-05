@@ -3,7 +3,7 @@ set_timer:
   description: Turn off this fan after a delay. Zero cancels. Restores after Home Assistant restarts. RF state remains assumed.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: fan
   fields:
     minutes:
@@ -19,14 +19,14 @@ safe_off:
   description: Send Speed 1, wait about one second, then send the configured power/off command. State remains assumed.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: fan
 send_command:
   name: Send configured RF command
   description: Send an existing learned command without changing or relearning it.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: fan
   fields:
     command:
@@ -39,7 +39,7 @@ set_light_cycle:
   description: Starting with the light physically off, replay its existing toggle command the configured number of times for the selected colour. RF state remains assumed.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: fan
   fields:
     mode:
@@ -53,7 +53,7 @@ set_assumed_state:
   description: Correct the displayed state without sending RF.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: fan
   fields:
     state:
@@ -75,7 +75,7 @@ set_light_assumed_state:
   description: Correct the displayed light state without sending RF.
   target:
     entity:
-      integration: rf_fan
+      integration: rf_remote
       domain: light
   fields:
     state:

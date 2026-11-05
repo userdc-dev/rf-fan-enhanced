@@ -9,6 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
+from .const import DOMAIN
+
 URL_PATH = "rf-fan-remotes"
 FILENAME = "rf_fan_remote_dashboard.yaml"
 
@@ -56,7 +58,7 @@ async def async_create_dashboard(hass):
     if existing is not None and getattr(existing, "path", None) != hass.config.path(FILENAME):
         raise HomeAssistantError("Another dashboard already uses rf-fan-remotes; it was not overwritten")
     registry = er.async_get(hass)
-    config = build_dashboard(hass.config_entries.async_entries("rf_fan"), list(registry.entities.values()))
+    config = build_dashboard(hass.config_entries.async_entries(DOMAIN), list(registry.entities.values()))
     path = Path(hass.config.path(FILENAME))
     store = Store(hass, 1, "rf_fan_dashboard")
     saved = await store.async_load() or {}
