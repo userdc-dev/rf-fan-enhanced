@@ -93,3 +93,15 @@ entry. Never edit `.storage` directly. The old service namespace
 `rf_fan.*` remains registered as an alias for existing automations; the
 frontend's historic static URL and dashboard storage identifiers are also
 retained deliberately.
+
+
+### HACS old-folder cleanup
+
+HACS derives the integration's local install path from the manifest domain. After
+the domain changes, the new code installs under
+`custom_components/rf_remote/`; HACS may leave the previous
+`custom_components/rf_fan/` directory behind. Do not remove it before all old
+config entries have been migrated, because it may still be serving those
+entries. Once no `rf_fan` config entries remain, remove the stale directory if
+it still exists and restart Home Assistant. Never remove the new
+`custom_components/rf_remote/` directory.
