@@ -1,3 +1,7 @@
+# 2.5.6 — 2026-11-06
+
+Rebranded the HACS listing and Home Assistant integration display name to **RF Remote Enhanced**. The internal `rf_fan` domain and all existing config-entry, entity and learned-command compatibility boundaries are preserved. No transmitter-backend changes.
+
 # 2.5.0 — 2026-10-28
 
 Added the reusable visual RF Fan Remote card, persistent Android/Companion App loading, automatic device discovery, stronger mobile fan separation, always-visible physical timer controls, Safe OFF, backend countdown timers, configurable light-cycle presets and supported config-entry cleanup. Existing RF signals and entity identities are retained.
