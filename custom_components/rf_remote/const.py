@@ -3,7 +3,6 @@
 DOMAIN = "rf_remote"
 LEGACY_DOMAIN = "rf_fan"
 CONF_LEGACY_ENTRY_ID = "_legacy_rf_fan_entry_id"
-CONF_STABLE_ENTRY_ID = "stable_entry_id"
 
 # The Broadlink integration stores its devices under this domain in hass.data.
 BROADLINK_DOMAIN = "broadlink"

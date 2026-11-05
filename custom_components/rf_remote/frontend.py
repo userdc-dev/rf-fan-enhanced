@@ -15,7 +15,6 @@ from .const import (
     CONF_LIGHT_CYCLE,
     CONF_LIGHT_CYCLE_CLICKS,
     CONF_SAFE_OFF,
-    CONF_STABLE_ENTRY_ID,
     CONF_SPEED_COUNT,
     CONF_SUB_ENTITIES,
     DOMAIN,
@@ -51,7 +50,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     result = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         data = entry.data
-        stable_entry_id = str(data.get(CONF_STABLE_ENTRY_ID) or get_stable_entry_id(data, entry.entry_id))
+        stable_entry_id = get_stable_entry_id(data, entry.entry_id)
         commands = data.get(CONF_COMMANDS, {})
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, entry.entry_id), entry.entry_id
