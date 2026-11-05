@@ -15,11 +15,13 @@ from .const import (
     CONF_LIGHT_CYCLE,
     CONF_LIGHT_CYCLE_CLICKS,
     CONF_SAFE_OFF,
+    CONF_STABLE_ENTRY_ID,
     CONF_SPEED_COUNT,
     CONF_SUB_ENTITIES,
     DOMAIN,
 )
 from .extra_buttons import EXTRA_BUTTONS
+from .migration import get_stable_entry_id
 
 CARD_PATH = "/rf_remote_static/rf-fan-remote-card.js"
 LEGACY_CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
@@ -49,6 +51,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
     result = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         data = entry.data
+        stable_entry_id = str(data.get(CONF_STABLE_ENTRY_ID) or get_stable_entry_id(data, entry.entry_id))
         commands = data.get(CONF_COMMANDS, {})
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, entry.entry_id), entry.entry_id
@@ -90,7 +93,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
             light_unique = f"{entry.entry_id}_light_{prefix}" if prefix else f"{entry.entry_id}_light"
             fans.append({
                 **item,
-                "fan_id": f"{entry.entry_id}:{prefix or 'primary'}",
+                "fan_id": f"{stable_entry_id}:{prefix or 'primary'}",
                 "entity_id": fan_entity,
                 "light_entity_id": by_unique.get(("light", light_unique)),
                 "safe_off_enabled": bool(data.get(CONF_SAFE_OFF, any(c["key"] == "speed_1" for c in available) and any(c["key"] == "off" for c in available))),

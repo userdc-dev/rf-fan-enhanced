@@ -9,7 +9,13 @@ from typing import Any
 LEGACY_DOMAIN = "rf_fan"
 DOMAIN = "rf_remote"
 LEGACY_ENTRY_KEY = "_legacy_rf_fan_entry_id"
+STABLE_ENTRY_KEY = "stable_entry_id"
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_stable_entry_id(data: dict[str, Any], current_entry_id: str) -> str:
+    """Return the legacy stable ID used by saved Lovelace cards, if present."""
+    return str(data.get(STABLE_ENTRY_KEY) or current_entry_id)
 
 
 def migrate_legacy_data(data: dict[str, Any], version: int) -> dict[str, Any]:
@@ -139,6 +145,8 @@ async def async_migrate_legacy_entry(hass, entry) -> None:
 
     data = dict(entry.data)
     data.pop(LEGACY_ENTRY_KEY, None)
+    # Keep the old value used by saved Lovelace fan_id selections.
+    data.setdefault(STABLE_ENTRY_KEY, legacy_entry_id)
     hass.config_entries.async_update_entry(entry, data=data)
 
     _LOGGER.info(
