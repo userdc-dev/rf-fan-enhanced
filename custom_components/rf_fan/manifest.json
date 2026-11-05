@@ -1,6 +1,6 @@
 {
   "domain": "rf_fan",
-  "name": "RF Fan Enhanced",
+  "name": "RF Remote Enhanced",
   "after_dependencies": [
     "broadlink",
     "frontend",
