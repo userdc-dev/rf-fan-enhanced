@@ -1,40 +1,8 @@
-RF Fan Enhanced 2.5.5 makes the reusable dashboard card explicitly per-fan.
+RF Remote Enhanced 2.5.6 updates the published integration name while preserving compatibility with existing installations.
 
-- Add **RF Fan Remote** from the standard Home Assistant card picker, select one
-  fan and save; no YAML, entity IDs or separate frontend installation is needed.
-- Normal cards no longer default to an all-devices remote. The generated sidebar
-  dashboard retains its intentional all-fans view.
-- The visual editor refreshes its choices when RF Fan devices change, and deleted
-  selections show a clear unavailable-device message.
-- Adds `DEVELOPER_HANDOVER.md` covering the frontend/backend contract, packaging,
-  compatibility boundaries and release checks.
+- Changes the HACS listing name and Home Assistant integration display name to **RF Remote Enhanced**.
+- Keeps the internal integration domain as `rf_fan`. Existing config entries, entity IDs, services, dashboards and learned RF commands are not migrated or recreated.
+- Keeps the current Broadlink-based RF learning and replay backend. ESPHome, Tuya and other transmitter backends are not added by this branding release.
+- Configures HACS to render the repository README as its information page.
 
-It also includes the 2.5.4 Google Home voice-control improvements:
-
-- Gives the existing Reverse, Wind Mode and Cycle Light Colour actions short,
-  voice-friendly names when RiDDiX exposes them through Matter.
-- Preserves entity IDs, learned RF packets and replay modes; only display names
-  used by voice assistants change.
-
-It also includes the 2.5.3 native Home Assistant and Matter improvements:
-
-- Exposes learned Natural Breeze commands as the native `Normal` / `Natural` fan preset modes used by RiDDiX Matter Hub's `naturalWind` mapping.
-- Makes initial direction and oscillation requests useful while keeping their one-way RF state explicitly optimistic.
-- Restores direction, oscillation and Natural Wind assumptions across Home Assistant restarts.
-- Gives the relative light-colour-cycle button a short voice-friendly name while preserving its entity ID and learned RF command.
-
-It also includes the 2.5.2 remote-card hotfix:
-
-- Restores the complete 2.5-style visual remote dashboard on Home Assistant 2026.9.
-- Shows a useful discovery error instead of `[object Object]` if the backend is unavailable.
-
-It also includes all 2.5.1 stability improvements:
-
-- Serializes state-changing operations for every fan belonging to the same learned remote, so speed, power, timer and remote-card actions cannot interleave with Safe OFF.
-- Makes software timer cancellation and reload handling race-safe. A timer missed while Home Assistant was offline is reported as missed and does not cause a surprise shutdown on startup.
-- Keeps the custom timer input intact while Home Assistant state updates refresh only the live countdown and Start/Restart label.
-- Enforces command ownership between primary and sub-fans, updates known optimistic states after remote-card commands, and lets the card editor select an individual sub-fan.
-- Removes duplicate light controls and presents multi-click light actions as relative sequences rather than guaranteed colour presets.
-- Skips identical generated-dashboard rewrites, protects externally changed dashboard files, and retains at most five generated-dashboard snapshots.
-
-Existing RF packets, replay modes, entity unique IDs, learning, reassignment, Broadlink resources and user dashboards are unchanged. RF remains one-way, so state is optimistic unless the installation has separate feedback. This release was validated without transmitting to physical fans.
+No RF protocol, command format, or transmitter behavior changes in this release.
