@@ -1,4 +1,4 @@
-"""Button platform for rf_fan - one entity per learned custom button."""
+"""Button platform for rf_remote - one entity per learned custom button."""
 
 from __future__ import annotations
 

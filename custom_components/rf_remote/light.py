@@ -1,4 +1,4 @@
-"""Light platform for rf_fan - toggle or on/off RF lights with optimistic state."""
+"""Light platform for rf_remote - toggle or on/off RF lights with optimistic state."""
 
 from __future__ import annotations
 

@@ -21,8 +21,10 @@ from .const import (
 )
 from .extra_buttons import EXTRA_BUTTONS
 
-CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
+CARD_PATH = "/rf_remote_static/rf-fan-remote-card.js"
+LEGACY_CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
 CARD_URL = f"{CARD_PATH}?v=3.0.0"
+LEGACY_CARD_URL = f"{LEGACY_CARD_PATH}?v=2.5.5"
 
 
 def _category(key: str) -> str:
@@ -123,13 +125,14 @@ async def _async_register_persistent_resource(hass: HomeAssistant) -> bool:
     resources = lovelace.resources
     await resources.async_get_info()
     existing = next(
-        (item for item in resources.async_items() if item.get("url", "").split("?", 1)[0] == CARD_PATH),
+        (item for item in resources.async_items() if item.get("url", "").split("?", 1)[0] in {CARD_PATH, LEGACY_CARD_PATH}),
         None,
     )
     if existing is None:
         await resources.async_create_item({"url": CARD_URL, "res_type": "module"})
     elif existing.get("url") != CARD_URL or existing.get("type") != "module":
         await resources.async_update_item(existing["id"], {"url": CARD_URL, "res_type": "module"})
+    frontend.remove_extra_js_url(hass, LEGACY_CARD_URL)
     frontend.remove_extra_js_url(hass, CARD_URL)
     return True
 
@@ -140,11 +143,12 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
     if state.get("frontend_setup"):
         return
     folder = Path(__file__).parent / "frontend"
-    # Reuse the legacy URL so existing Lovelace resources and dashboards survive.
-    if not hass.data.get("rf_fan", {}).get("frontend_setup"):
-        await hass.http.async_register_static_paths([
-            StaticPathConfig("/rf_fan_static", str(folder), cache_headers=False)
-        ])
+    # Serve the renamed domain path. Existing Lovelace resources are updated
+    # from the legacy URL below, avoiding a collision if the old component is
+    # still loaded during migration.
+    await hass.http.async_register_static_paths([
+        StaticPathConfig("/rf_remote_static", str(folder), cache_headers=False)
+    ])
     # The fallback covers startup before Lovelace exists. The persistent
     # resource below is what fresh Android Companion App WebViews consume.
     frontend.add_extra_js_url(hass, CARD_URL)

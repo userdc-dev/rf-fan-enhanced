@@ -1,4 +1,4 @@
-"""Config and options flows for rf_fan.
+"""Config and options flows for rf_remote.
 
 Setup is split into two screens:
   Screen 1 – device name, primary entity type, RF transmitter & frequency.

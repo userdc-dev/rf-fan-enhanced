@@ -1,4 +1,4 @@
-"""Fan platform for rf_fan - an optimistic, discrete-speed RF fan."""
+"""Fan platform for rf_remote - an optimistic, discrete-speed RF fan."""
 
 from __future__ import annotations
 
