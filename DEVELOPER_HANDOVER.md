@@ -21,8 +21,8 @@ The visual flow is:
 4. Save.
 
 Normal cards store only `fan_id`, whose value is
-`<config_entry_id>:<key_prefix-or-primary>`. This remains stable when a device or
-entity is renamed. The integration-generated sidebar dashboard deliberately uses
+`<stable_entry_id>:<key_prefix-or-primary>`. During migration, the original entry ID
+is retained as `stable_entry_id`, so saved card selections continue to resolve. The integration-generated sidebar dashboard deliberately uses
 `device_id: all`; that special value must not be offered by the normal card
 editor.
 
