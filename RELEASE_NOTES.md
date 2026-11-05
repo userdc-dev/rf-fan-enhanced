@@ -1,8 +1,10 @@
-RF Remote Enhanced 2.5.6 updates the published integration name while preserving compatibility with existing installations.
+RF Remote Enhanced 3.0.0 introduces the new `rf_remote` Home Assistant integration domain.
 
-- Changes the HACS listing name and Home Assistant integration display name to **RF Remote Enhanced**.
-- Keeps the internal integration domain as `rf_fan`. Existing config entries, entity IDs, services, dashboards and learned RF commands are not migrated or recreated.
-- Keeps the current Broadlink-based RF learning and replay backend. ESPHome, Tuya and other transmitter backends are not added by this branding release.
-- Configures HACS to render the repository README as its information page.
+- Adds a guided migration from existing `rf_fan` config entries.
+- Creates a private backup before migration.
+- Transfers learned RF commands and config-entry options without relearning.
+- Moves entity-registry and device-registry ownership to `rf_remote`, preserving existing entity IDs and device IDs.
+- Keeps `rf_fan.*` service aliases for existing automations.
+- Retains the historic Lovelace card URL, dashboard storage key, private snapshot folder and command-export format.
 
-No RF protocol, command format, or transmitter behavior changes in this release.
+The RF learning and replay backend remains Broadlink-based. This release does not add ESPHome, Tuya or other transmitter backends. No RF protocol or command encoding changes are included.

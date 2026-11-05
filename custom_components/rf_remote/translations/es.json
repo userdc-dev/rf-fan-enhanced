@@ -9,6 +9,10 @@
           "entity_type": "Tipo de entidad principal",
           "transmitter": "Transmisor RF",
           "frequency": "Frecuencia"
+        },
+        "menu_options": {
+          "migrate_legacy": "Migrar un dispositivo RF Fan existente",
+          "new_device": "Configurar un dispositivo RF nuevo"
         }
       },
       "entity_options": {
@@ -42,6 +46,23 @@
           "retry": "Intentar de nuevo",
           "retry_direct": "Capturar sin el barrido"
         }
+      },
+      "migrate_legacy": {
+        "title": "Migrar un dispositivo RF Fan existente",
+        "description": "Selecciona un dispositivo RF Fan Enhanced configurado anteriormente. Se migrarán los comandos aprendidos, las opciones y los ID de entidad; no es necesario volver a aprenderlos.",
+        "data": {
+          "legacy_entry": "Dispositivo RF Fan existente"
+        }
+      },
+      "new_device": {
+        "title": "Añadir un dispositivo RF nuevo",
+        "description": "Asigna un nombre, elige el tipo de entidad principal y selecciona el transmisor RF.",
+        "data": {
+          "name": "Nombre del dispositivo",
+          "entity_type": "Tipo de entidad principal",
+          "transmitter": "Transmisor RF",
+          "frequency": "Frecuencia"
+        }
       }
     },
     "progress": {
@@ -50,7 +71,9 @@
       "press": "Pulsa **{button}** una vez en tu mando para capturarlo."
     },
     "abort": {
-      "no_rf_device": "No se encontró ningún dispositivo Broadlink con capacidad RF. Configura tu RM4 Pro (o similar) en la integración de Broadlink primero."
+      "no_rf_device": "No se encontró ningún dispositivo Broadlink con capacidad RF. Configura tu RM4 Pro (o similar) en la integración de Broadlink primero.",
+      "no_legacy_entries": "No se encontraron entradas RF Fan antiguas.",
+      "already_migrated": "Ya hay una migración en curso para esta entrada RF Fan."
     },
     "error": {
       "learn_failed": "El aprendizaje ha fallado. Por favor, inténtalo de nuevo."

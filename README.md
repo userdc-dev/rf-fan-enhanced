@@ -8,13 +8,20 @@ Learn and control compatible RF ceiling fans, lights, covers and remote buttons 
 
 Download in HACS, restart Home Assistant, then add your RF remote:
 
-[![Add RF Remote Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_fan)
+[![Add RF Remote Enhanced](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=rf_remote)
 
 **Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured Broadlink RM Pro / RM4 Pro. The current learning and replay backend is Broadlink-based; ESPHome, Tuya and other transmitter backends are not yet implemented. The Broadlink transmitter must be available to Home Assistant through `radio_frequency`. RF commands need to be learned from your own remote. For best coverage, place the transmitter near the centre of the area it needs to reach.
 
 My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan with LED Light. (both came with remotes and I used this project to replace them). Contact- divy@dcgogna.com or via Github messages for any extra information.
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
+
+## What's new in 3.0.0
+
+- Changes the Home Assistant integration domain from `rf_fan` to `rf_remote`.
+- Adds a guided migration for existing RF Fan Enhanced entries. It backs up the old entry, transfers learned RF commands and options, and migrates entity/device registry records while preserving existing entity IDs and device IDs.
+- Keeps the legacy `rf_fan.*` service names as compatibility aliases; new automations should use `rf_remote.*`.
+- Retains historic dashboard, frontend resource, snapshot-folder and command-export identifiers where changing them would break existing user data.
 
 ## What's new in 2.5.6
 
@@ -79,21 +86,21 @@ RF is one-way. A successful transmission does not prove that the fan responded. 
 
 ## Actions
 
-- `rf_fan.set_timer`: target a fan and set `minutes` to a delay, such as `120`; `0` cancels. Default restored-state startup behavior also restores the timer.
+- `rf_remote.set_timer`: target a fan and set `minutes` to a delay, such as `120`; `0` cancels. Default restored-state startup behavior also restores the timer.
 - `rf_fan.safe_off`: send Speed 1, wait about one second, then send the existing power/off command.
-- `rf_fan.set_light_cycle`: starting with the physical light off, select `cool`, `neutral` or `warm` to replay the configured number of light-toggle presses.
-- `rf_fan.set_assumed_state`: set fan `state` to `on`, `off` or `unknown`, with optional `percentage` and `direction` (`forward`, `reverse` or `unknown`). Does not transmit. Confirm direction before using an absolute direction action on a toggle-only remote.
-- `rf_fan.set_light_assumed_state`: correct the displayed light `state` without transmitting.
+- `rf_remote.set_light_cycle`: starting with the physical light off, select `cool`, `neutral` or `warm` to replay the configured number of light-toggle presses.
+- `rf_remote.set_assumed_state`: set fan `state` to `on`, `off` or `unknown`, with optional `percentage` and `direction` (`forward`, `reverse` or `unknown`). Does not transmit. Confirm direction before using an absolute direction action on a toggle-only remote.
+- `rf_remote.set_light_assumed_state`: correct the displayed light `state` without transmitting.
 
 Standard fan/light entities can be exposed by Matter Hub or other Home Assistant bridges. Individual bridge capabilities vary; this release does not claim end-to-end Google Home or Alexa certification.
 
 ## Upgrades and backups
 
-The domain remains `rf_fan`; do not remove your configured devices to upgrade. Existing command data and entity identities are preserved. Back up Home Assistant before changing integration sources.
+The active integration domain is now `rf_remote`. After upgrading and restarting Home Assistant, add **RF Remote Enhanced** from **Settings → Devices & services → Add integration**. If old `rf_fan` entries are detected, choose **Migrate an existing RF Fan device** and select each remote. The migration creates a private backup, transfers learned commands and options, and updates the entity/device registries while preserving existing entity IDs and device IDs. Do not delete old entries manually or edit Home Assistant `.storage` files. Back up Home Assistant before upgrading.
 
 Private automatic snapshots are stored under `rf_fan_safety` in your Home Assistant configuration folder. Command exports contain replayable RF signals; keep them private. Diagnostics omit those signals. The generated dashboard stores entity controls only.
 
-This integration and the original `rf_fan` integration share a domain, so install one implementation at a time.
+The old `rf_fan.*` service names remain available as aliases for existing automations. The private snapshot folder (`rf_fan_safety`), generated dashboard storage key, frontend URL and command-export format retain their historical names intentionally for compatibility.
 
 ## Validation
 
