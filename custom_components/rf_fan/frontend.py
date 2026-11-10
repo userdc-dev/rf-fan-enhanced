@@ -22,7 +22,7 @@ from .const import (
 from .extra_buttons import EXTRA_BUTTONS
 
 CARD_PATH = "/rf_fan_static/rf-fan-remote-card.js"
-CARD_URL = f"{CARD_PATH}?v=2.5.5"
+CARD_URL = f"{CARD_PATH}?v=2.5.8"
 
 
 def _category(key: str) -> str:
@@ -92,7 +92,7 @@ def _devices(hass: HomeAssistant) -> list[dict]:
                 "entity_id": fan_entity,
                 "light_entity_id": by_unique.get(("light", light_unique)),
                 "safe_off_enabled": bool(data.get(CONF_SAFE_OFF, any(c["key"] == "speed_1" for c in available) and any(c["key"] == "off" for c in available))),
-                "light_cycle": ({"cool": 1, "neutral": 3, "warm": 5, **data.get(CONF_LIGHT_CYCLE_CLICKS, {})}
+                "light_cycle": ({"cool": 1, "neutral": 2, "warm": 3, **data.get(CONF_LIGHT_CYCLE_CLICKS, {})}
                     if data.get(CONF_LIGHT_CYCLE, any(c["key"] == "light" for c in available)) and any(c["key"] == "light" for c in available)
                     else None),
                 "commands": available,

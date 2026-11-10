@@ -1,3 +1,7 @@
+# 2.5.8 — 2026-11-10
+
+Fixed the reusable dashboard card's fallback light-cycle defaults so existing dashboards display 1× / 2× / 3× instead of the obsolete 1× / 3× / 5× values. Bumped the card resource URL to force Home Assistant and Companion App clients to load the current resource. No dashboard editing or RF relearning is required.
+
 # 2.5.7 — 2026-11-10
 
 Changed the default toggle-only light colour presets to 1× / 2× / 3×. Existing config entries are migrated automatically from the former built-in 1× / 3× / 5× defaults when Home Assistant loads the updated integration. Other saved click combinations are preserved.
