@@ -1,3 +1,7 @@
+# 2.5.9 — 2026-11-10
+
+Fixed the actual RF light-cycle transmission defaults to 1× / 2× / 3×. The fan entity now sends the light toggle command the configured number of times, with the existing inter-press delay and learned RF command unchanged. Existing user-customised click counts remain respected.
+
 # 2.5.8 — 2026-11-10
 
 Fixed the reusable dashboard card's fallback light-cycle defaults so existing dashboards display 1× / 2× / 3× instead of the obsolete 1× / 3× / 5× values. Bumped the card resource URL to force Home Assistant and Companion App clients to load the current resource. No dashboard editing or RF relearning is required.
