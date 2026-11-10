@@ -1,4 +1,6 @@
-# 2.5.6 — 2026-11-06
+# 2.5.7 — 2026-11-10
+
+Changed the default toggle-only light colour presets to 1× / 2× / 3×. Existing config entries are migrated automatically from the former built-in 1× / 3× / 5× defaults when Home Assistant loads the updated integration. Other saved click combinations are preserved.
 
 Rebranded the HACS listing and Home Assistant integration display name to **RF Remote Enhanced**. The internal `rf_fan` domain and all existing config-entry, entity and learned-command compatibility boundaries are preserved. No transmitter-backend changes.
 

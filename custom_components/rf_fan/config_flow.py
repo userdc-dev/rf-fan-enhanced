@@ -413,7 +413,7 @@ class _LearnFlowMixin:
 class RfFanConfigFlow(_LearnFlowMixin, ConfigFlow, domain=DOMAIN):
     """Two-screen setup wizard + button-learning for an RF device."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialise wizard state."""
@@ -700,8 +700,8 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
         self._light_cycle_enabled = bool(entry.data.get(CONF_LIGHT_CYCLE, CMD_LIGHT in self._commands))
         self._light_cycle_clicks = {
             "cool": 1,
-            "neutral": 3,
-            "warm": 5,
+            "neutral": 2,
+            "warm": 3,
             **entry.data.get(CONF_LIGHT_CYCLE_CLICKS, {}),
         }
         self._replay_mode = entry.data.get("replay_mode", "legacy")

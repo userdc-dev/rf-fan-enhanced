@@ -39,7 +39,7 @@ Earlier 2.5 features include:
 - **Compact mobile remote:** clearly separated fan panels, responsive controls, visible physical RF timer buttons and no unnecessary Advanced section.
 - **Safe OFF:** optionally sends Speed 1, waits about one second, then sends the existing power/off command. Overlapping shutdown sequences are prevented.
 - **Custom software timer:** arbitrary minutes or hours, live backend countdown, cancel/restart and sensible restart restoration. Expiry uses Safe OFF when enabled.
-- **Light-cycle presets:** for toggle-only lights, configurable Cool/Neutral/Warm presets replay the existing light command 1×/3×/5× by default. Start with the physical light off; RF state is still assumed.
+- **Light-cycle presets:** for toggle-only lights, configurable Cool/Neutral/Warm presets replay the existing light command 1×/2×/3× by default. Start with the physical light off; RF state is still assumed.
 - **Automatic cleanup:** removing an RF Fan device uses Home Assistant's config-entry APIs and never removes a shared Broadlink or user-created automation/dashboard.
 
 Previous 2.3 features remain available:
