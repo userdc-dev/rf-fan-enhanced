@@ -30,11 +30,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     CONF_SUB_ENTITIES entries of entity_type=button so the new button.py
     platform can pick them up without any data loss.
     """
+    data = dict(entry.data)
+
     if entry.version == 1:
         _LOGGER.info(
             "rf_fan: migrating config entry '%s' from version 1 to 2", entry.title
         )
-        data = dict(entry.data)
 
         # Convert each legacy custom button into a sub-entity record.
         legacy_customs = data.pop(CONF_CUSTOMS, [])
@@ -51,11 +52,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 })
 
         data[CONF_SUB_ENTITIES] = sub_entities
-
-        hass.config_entries.async_update_entry(entry, data=data, version=2)
         _LOGGER.info(
             "rf_fan: migration complete — %d custom button(s) converted to sub-entities",
             len(legacy_customs),
+        )
+
+    if entry.version < 3:
+        # The previous built-in light-cycle defaults were 1/3/5. Update that
+        # exact stored default automatically. Any other stored combination is
+        # treated as user-customised and is left untouched.
+        old_defaults = {"cool": 1, "neutral": 3, "warm": 5}
+        if data.get(CONF_LIGHT_CYCLE_CLICKS) == old_defaults:
+            data[CONF_LIGHT_CYCLE_CLICKS] = {
+                "cool": 1,
+                "neutral": 2,
+                "warm": 3,
+            }
+
+        hass.config_entries.async_update_entry(entry, data=data, version=3)
+        _LOGGER.info(
+            "rf_fan: config entry '%s' migrated to version 3", entry.title
         )
 
     return True
