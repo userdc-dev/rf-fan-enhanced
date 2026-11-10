@@ -698,11 +698,16 @@ class RfFanOptionsFlow(_LearnFlowMixin, OptionsFlow):
             "speed_1" in self._commands and CMD_OFF in self._commands,
         ))
         self._light_cycle_enabled = bool(entry.data.get(CONF_LIGHT_CYCLE, CMD_LIGHT in self._commands))
+        saved_light_cycle_clicks = entry.data.get(CONF_LIGHT_CYCLE_CLICKS, {})
+        # Migrate the former built-in 1x/3x/5x defaults to 1x/2x/3x,
+        # while preserving any values the user explicitly customised.
+        if saved_light_cycle_clicks == {"cool": 1, "neutral": 3, "warm": 5}:
+            saved_light_cycle_clicks = {"cool": 1, "neutral": 2, "warm": 3}
         self._light_cycle_clicks = {
             "cool": 1,
-            "neutral": 3,
-            "warm": 5,
-            **entry.data.get(CONF_LIGHT_CYCLE_CLICKS, {}),
+            "neutral": 2,
+            "warm": 3,
+            **saved_light_cycle_clicks,
         }
         self._replay_mode = entry.data.get("replay_mode", "legacy")
 
