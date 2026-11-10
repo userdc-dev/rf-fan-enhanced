@@ -177,8 +177,8 @@ class RfFan(FanEntity, RestoreEntity):
         )
         self._light_cycle_clicks = {
             "cool": 1,
-            "neutral": 3,
-            "warm": 5,
+            "neutral": 2,
+            "warm": 3,
             **data.get(CONF_LIGHT_CYCLE_CLICKS, {}),
         }
         self._state_uncertain = True
