@@ -14,7 +14,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_CUSTOMS, CONF_SUB_ENTITIES, DOMAIN, ENTITY_TYPE_BUTTON, EVENT_UPDATED
+from .const import (
+    CONF_CUSTOMS,
+    CONF_LIGHT_CYCLE_CLICKS,
+    CONF_SUB_ENTITIES,
+    DOMAIN,
+    ENTITY_TYPE_BUTTON,
+    EVENT_UPDATED,
+)
 from .dashboard import async_restore_dashboard
 from .frontend import async_setup_frontend
 
@@ -27,8 +34,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate config entries from older versions.
 
     v1 → v2: CONF_CUSTOMS (list of {key, name} button dicts) is converted into
-    CONF_SUB_ENTITIES entries of entity_type=button so the new button.py
-    platform can pick them up without any data loss.
+    CONF_SUB_ENTITIES entries of entity_type=button.
+    v2 → v3: the former built-in light-cycle click defaults (1/3/5) are
+    migrated to 1/2/3. Other saved combinations are preserved.
     """
     data = dict(entry.data)
 
