@@ -12,7 +12,7 @@ Download in HACS, restart Home Assistant, then add your RF remote:
 
 **Requirements:** Home Assistant 2026.9.2 or newer, HACS, and a configured Broadlink RM Pro / RM4 Pro. The current learning and replay backend is Broadlink-based; ESPHome, Tuya and other transmitter backends are not yet implemented. The Broadlink transmitter must be available to Home Assistant through `radio_frequency`. RF commands need to be learned from your own remote. For best coverage, place the transmitter near the centre of the area it needs to reach.
 
-My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan with LED Light. (both came with remotes and I used this project to replace them). Contact- divy@dcgogna.com or via Github messages for any extra information.
+My Use cases- Ceiling Fans, Black Goldair 132cm DC, Easyhome (Aldi) 132cm DC fan with LED Light. (both came with remotes and I used this project to replace them). Contact- admin@dcgogna.com or via Github messages for any extra information.
 
 If HACS does not discover the repository automatically, add `https://github.com/userdc-dev/rf-fan-enhanced` under **HACS → Custom repositories**, category **Integration**. Availability as a custom repository does not mean approval in the default HACS catalogue.
 
